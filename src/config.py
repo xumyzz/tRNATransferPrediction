@@ -12,15 +12,15 @@ class Config:
     # 训练参数
     BATCH_SIZE = 2
     ACCUM_STEPS = 32
-    EPOCHS = 15
-    LR = 0.001
-    POS_WEIGHT = 4.0
+    EPOCHS = 10
+    LR = 0.0001
+    POS_WEIGHT = 3.5
     WEIGHT_DECAY = 1e-4
     # 模型参数
     RESNET_LAYERS = 8
-    HIDDEN_DIM = 128
-    LSTM_HIDDEN = 128
-    PRETRAINED_PATH = None
+    HIDDEN_DIM = 64
+    LSTM_HIDDEN = 64
+    PRETRAINED_PATH = r'D:\PycharmProjects\tRNATransferPrediction\checkpoints\model_transformer_epoch_4.pth'
 
     # 设备
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")

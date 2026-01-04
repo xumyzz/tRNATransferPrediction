@@ -1,25 +1,43 @@
 import torch
+from torch import nn
 
 
-def compute_masked_loss(logits, targets, masks, criterion):
+def compute_masked_loss(logits, targets, masks, pos_weight=None):
     """
-    计算带 Mask 的 Loss
-    :param criterion: 也就是你的 criterion_raw (BCEWithLogitsLoss)
+    计算带 Mask 的 Loss，并在内部处理类别不平衡权重
+    Args:
+        logits: 模型输出 (B, L, L)
+        targets: 真实标签 (B, L, L)
+        masks: 序列 Mask (B, L)
+        pos_weight: 正样本权重数值 (float). 如果为 None, 则默认设为 1.0
     """
-    # 构建 2D Mask: (B, L, L)
+    # 1. 处理默认权重
+    if pos_weight is None:
+        pos_weight = 1.0
+
+    # 2. 构建 2D Mask: (B, L) -> (B, L, L)
+    # 只有当 i 和 j 都在 mask 内时，(i, j) 才是有效的
     mask_2d = masks.unsqueeze(1) * masks.unsqueeze(2)
 
-    # 确保设备一致
+    # 3. 确保设备一致
     device = logits.device
     mask_2d = mask_2d.to(device)
     targets = targets.to(device)
 
-    # 计算 Element-wise Loss
+    # 4. 动态定义 Loss 函数
+    # reduction='none' 是为了得到每个像素的 loss，以便后续乘以 mask
+    criterion = nn.BCEWithLogitsLoss(
+        pos_weight=torch.tensor([pos_weight], device=device),
+        reduction='none'
+    )
+
+    # 5. 计算 Loss
     loss_mat = criterion(logits, targets)
 
-    # 只保留 Mask 内的 Loss 并求平均
-    # 加上 1e-6 防止除以 0
+    # 6. 只保留 Mask 内的 Loss 并求平均
+    # (mask_2d.sum() + 1e-6) 防止除以 0
     loss = (loss_mat * mask_2d).sum() / (mask_2d.sum() + 1e-6)
+
     return loss
 
 

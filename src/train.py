@@ -7,16 +7,16 @@ import os
 # --- 导入我们拆分好的模块 ---
 from .config import Config  # 导入配置
 from .utils import compute_masked_loss, calculate_f1  # 导入工具函数
-from .dataset import MultiFileDataset, collate_pad  # 假设你已经有了这个文件
-from .model import SpotRNAWithLSTM  # 假设你已经有了这个文件
-from .model import SpotRNAWithTransformer
+from .dataset import MultiFileDataset, collate_pad,MultiFileDatasetUpgrade  # 假设你已经有了这个文件
+# from .model import SpotRNAWithLSTM  # 假设你已经有了这个文件
+from .model import SpotRNA_LSTM_Refined
 
 def train():
     print(f"使用设备: {Config.DEVICE}")
 
     # --- 1. 准备数据 ---
     # 直接使用 Config 中的参数
-    full_ds = MultiFileDataset(Config.DATA_DIR, max_len=Config.MAX_LEN)
+    full_ds = MultiFileDatasetUpgrade(Config.DATA_DIR, max_len=Config.MAX_LEN)
 
     if len(full_ds) == 0:
         print("错误：没有数据，请检查路径。")
@@ -39,7 +39,7 @@ def train():
     # ).to(Config.DEVICE)
 
     #此处使用ResNet+Transformer
-    model = SpotRNAWithTransformer(
+    model = SpotRNA_LSTM_Refined(
         Config
     ).to(Config.DEVICE)
 
@@ -62,7 +62,7 @@ def train():
 
     # --- 3. Loss 定义 ---
     pos_weight_tensor = torch.tensor([Config.POS_WEIGHT]).to(Config.DEVICE)
-    criterion_raw = nn.BCEWithLogitsLoss(pos_weight=pos_weight_tensor, reduction='none')
+    # criterion_raw = nn.BCEWithLogitsLoss(pos_weight=pos_weight_tensor, reduction='none')
 
     # --- 4. 开始训练循环 ---
     print(f"\n开始训练 (Epochs={Config.EPOCHS}, Accum={Config.ACCUM_STEPS})...")
@@ -74,15 +74,16 @@ def train():
 
         for batch_idx, (seqs, labels, masks) in enumerate(train_loader):
             seqs = seqs.to(Config.DEVICE)
-            labels = labels.to(Config.DEVICE)  # 别忘了把 labels 也放进去
-            masks = masks.to(Config.DEVICE)  # masks 也要放进去
+            labels = labels.to(Config.DEVICE)
+            masks = masks.to(Config.DEVICE)
 
-            logits = model(seqs)
+            # === 修改 1: 传入 mask ===
+            logits = model(seqs, mask=masks)
 
-            # 调用 utils.py 中的函数计算 loss
-            loss = compute_masked_loss(logits, labels, masks, criterion_raw)
+            # === 修改 2: 调用 utils 计算 loss (带 pos_weight) ===
+            # 直接在这里传入 pos_weight，不依赖外部 criterion
+            loss = compute_masked_loss(logits, labels, masks, pos_weight=Config.POS_WEIGHT)
 
-            # 梯度累积
             loss = loss / Config.ACCUM_STEPS
             loss.backward()
 
@@ -115,10 +116,12 @@ def train():
                 labels = labels.to(Config.DEVICE)
                 masks = masks.to(Config.DEVICE)
 
-                logits = model(seqs)
+                # [修正1] 验证时也要传入 mask，避免 Padding 干扰
+                logits = model(seqs, mask=masks)
 
-                # 使用同样的工具函数计算验证 Loss
-                loss = compute_masked_loss(logits, labels, masks, criterion_raw)
+                # [修正2] 这里不能传 criterion_raw 了，要传 pos_weight
+                loss = compute_masked_loss(logits, labels, masks, pos_weight=Config.POS_WEIGHT)
+
                 val_loss += loss.item()
 
                 # 使用工具函数计算 F1
@@ -127,8 +130,8 @@ def train():
 
         print(f"=== 验证集 Loss: {val_loss / len(val_loader):.4f} | F1: {val_f1 / len(val_loader):.4f} ===\n")
 
-        # 保存模型
-        save_path = os.path.join(Config.MODEL_SAVE_DIR, f"model_lstm_epoch_{epoch + 1}.pth")
+        # 保存模型 (建议文件名改得更有意义一点)
+        save_path = os.path.join(Config.MODEL_SAVE_DIR, f"model_transformer_epoch_{epoch + 1}.pth")
         torch.save(model.state_dict(), save_path)
 
 

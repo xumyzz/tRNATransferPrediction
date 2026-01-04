@@ -49,7 +49,7 @@ class MultiFileDataset(Dataset):
         self.processor = BpRNAProcessor()
         self.data = []
 
-        file_list = sorted(glob.glob(os.path.join(data_dir, "*.st")))
+        file_list = sorted(glob.glob(os.path.join(data_dir, "*.dbn")))
         print(f"找到 {len(file_list)} 个文件，开始加载并过滤 (MaxLen={max_len})...")
 
         for fpath in file_list:
@@ -114,3 +114,128 @@ def collate_pad(batch):
         labels[i, :n, :n] = l
         masks[i, :n] = 1.0
     return seqs, labels, masks
+
+
+class MultiFileDatasetUpgrade(Dataset):
+    def __init__(self, data_dir_or_file, max_len=600):
+        self.processor = BpRNAProcessor()
+        self.data = []
+
+        # 1. 获取文件列表
+        if os.path.isfile(data_dir_or_file):
+            file_list = [data_dir_or_file]
+        else:
+            file_list = sorted(glob.glob(os.path.join(data_dir_or_file, "*.dbn")))
+            # 如果找不到 .dbn，试试 .st (你刚才提到的后缀)
+            if not file_list:
+                file_list = sorted(glob.glob(os.path.join(data_dir_or_file, "*.st")))
+
+        print(f"🧐 正在扫描 {len(file_list)} 个文件 (MaxLen={max_len})...")
+
+        # 统计计数
+        stats = {"total": 0, "kept": 0, "long": 0, "error": 0}
+
+        for fpath in file_list:
+            try:
+                with open(fpath, 'r', encoding='utf-8', errors='ignore') as f:
+                    # 预处理：去掉纯空行
+                    lines = [line.strip() for line in f if line.strip()]
+
+                # === 核心解析状态机 ===
+                # state 0: 找 Name
+                # state 1: 找 Seq (纯字母)
+                # state 2: 找 Struct (含括号)
+
+                current_entry = {}
+                state = 0
+
+                for line in lines:
+                    # 1. 如果遇到 #Name: 或 >，说明是一条新数据的开始
+                    if line.startswith("#Name:") or line.startswith(">"):
+                        # 如果上一条数据还没存，先存上一条 (如果有的话)
+                        if state == 2 and 'seq' in current_entry and 'struct' in current_entry:
+                            self._add_if_valid(current_entry, max_len, stats)
+
+                        # 重置状态，开始新的一条
+                        current_entry = {}
+                        state = 1  # 下一步该找 Seq 了
+                        continue
+
+                    # 2. 如果是注释行 (#Length, #PageNumber)，直接跳过
+                    if line.startswith("#"):
+                        continue
+
+                    # 3. 找序列 (State 1)
+                    if state == 1:
+                        # 启发式判断：如果包含括号，那说明漏掉了 Seq，直接变成 Struct 了 (格式错误)
+                        if any(c in "().[]{}<>" for c in line):
+                            # 尝试补救：如果是第一行就是结构，那这数据没法要
+                            state = 0
+                            continue
+
+                        # 正常的序列应该只包含字母
+                        # 你的数据里有 'AGAG...'
+                        current_entry['seq'] = line.upper().replace('T', 'U')
+                        state = 2  # 下一步找 Struct
+                        continue
+
+                    # 4. 找结构 (State 2)
+                    if state == 2:
+                        # 结构行特征：包含括号或点
+                        if any(c in "().[]{}<>" for c in line):
+                            current_entry['struct'] = line
+                            # 找到了完整的一对，尝试保存
+                            self._add_if_valid(current_entry, max_len, stats)
+                            # 保存完归零，准备找下一个 Name
+                            current_entry = {}
+                            state = 0
+                        else:
+                            # 到了 State 2 却没看到括号，可能是多行序列？暂不处理复杂情况
+                            state = 0
+
+                # 循环结束，别忘了最后一条
+                if 'seq' in current_entry and 'struct' in current_entry:
+                    self._add_if_valid(current_entry, max_len, stats)
+
+            except Exception as e:
+                print(f"⚠️ 读取 {os.path.basename(fpath)} 失败: {e}")
+
+        print("\n" + "=" * 30)
+        print(f"📊 加载报告 (MaxLen={max_len})")
+        print(f"✅ 最终入库: {stats['kept']}")
+        print(f"❌ 超长丢弃: {stats['long']}")
+        print(f"❌ 格式/N多: {stats['error']}")
+        print("=" * 30 + "\n")
+
+    def _add_if_valid(self, entry, max_len, stats):
+        seq = entry['seq']
+        struct = entry['struct']
+        stats["total"] += 1
+
+        # 1. 长度检查
+        if len(seq) > max_len:
+            stats["long"] += 1
+            return
+
+        # 2. 长度匹配检查
+        if len(seq) != len(struct):
+            stats["error"] += 1
+            return
+
+        # 3. 内容检查 (允许 20% 的 N，因为预训练不用太严)
+        if seq.count('N') / len(seq) > 0.2:
+            stats["error"] += 1
+            return
+
+        # 4. 通过
+        self.data.append(entry)
+        stats["kept"] += 1
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        e = self.data[idx]
+        s_ten = self.processor.seq_to_onehot(e['seq'])
+        l_mat = self.processor.struct_to_matrix(e['struct'])
+        return s_ten, l_mat
