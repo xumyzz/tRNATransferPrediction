@@ -4,6 +4,14 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 
+# Import Config for shared constants
+try:
+    from .config import Config
+    DEFAULT_MAX_N_RATIO = Config.MAX_N_RATIO
+except (ImportError, AttributeError):
+    # Fallback if config not available or running as standalone
+    DEFAULT_MAX_N_RATIO = 0.2
+
 
 # --- 1. 保持 BpRNAProcessor 不变 ---
 class BpRNAProcessor:
@@ -229,7 +237,7 @@ class MultiFileDatasetUpgrade(Dataset):
             return
 
         # 3. 内容检查 (允许 20% 的 N，因为预训练不用太严)
-        if seq.count('N') / len(seq) > 0.2:
+        if seq.count('N') / len(seq) > DEFAULT_MAX_N_RATIO:
             stats["error"] += 1
             return
 

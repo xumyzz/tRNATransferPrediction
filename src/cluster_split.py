@@ -6,6 +6,9 @@ import json
 import random
 from typing import Dict, List, Tuple
 
+# Warning threshold for missing samples (as percentage)
+MISSING_SAMPLE_WARNING_THRESHOLD = 10.0
+
 
 def parse_cdhit_clstr(clstr_path: str) -> Dict[str, int]:
     """
@@ -159,8 +162,8 @@ def create_cluster_splits(
         print(f"⚠️  WARNING: {len(unknown_indices)} 个样本未在聚类文件中找到！")
         print(f"   这占总数据集的 {unknown_pct:.1f}%")
         print(f"   这些样本将按比例分配到各个分割中")
-        if unknown_pct > 10:
-            print(f"   ⚠️  缺失样本超过 10%，请检查聚类文件是否匹配训练数据！")
+        if unknown_pct > MISSING_SAMPLE_WARNING_THRESHOLD:
+            print(f"   ⚠️  缺失样本超过 {MISSING_SAMPLE_WARNING_THRESHOLD:.0f}%，请检查聚类文件是否匹配训练数据！")
         print(f"{'!' * 50}\n")
     
     # Print statistics
