@@ -158,6 +158,12 @@ class MultiFileDatasetUpgrade(Dataset):
 
                         # 重置状态，开始新的一条
                         current_entry = {}
+                        # Extract name from the line
+                        if line.startswith("#Name:"):
+                            current_entry['name'] = line.split(":", 1)[1].strip()
+                        else:  # starts with ">"
+                            # Extract name up to first whitespace
+                            current_entry['name'] = line[1:].split()[0] if len(line) > 1 else "unknown"
                         state = 1  # 下一步该找 Seq 了
                         continue
 
@@ -239,3 +245,7 @@ class MultiFileDatasetUpgrade(Dataset):
         s_ten = self.processor.seq_to_onehot(e['seq'])
         l_mat = self.processor.struct_to_matrix(e['struct'])
         return s_ten, l_mat
+    
+    def get_name(self, idx):
+        """Get the name/identifier of a sample by index."""
+        return self.data[idx].get('name', f'unknown_{idx}')
