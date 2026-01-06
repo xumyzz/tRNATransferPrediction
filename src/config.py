@@ -8,6 +8,7 @@ class Config:
 
     # 数据参数
     MAX_LEN = 300
+    MAX_N_RATIO = 0.2  # Maximum ratio of N nucleotides allowed (20%)
 
     # 训练参数
     BATCH_SIZE = 2

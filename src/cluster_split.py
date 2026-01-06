@@ -145,6 +145,9 @@ def create_cluster_splits(
     if unknown_indices:
         random.shuffle(unknown_indices)
         n_unknown = len(unknown_indices)
+        n_total = len(dataset)
+        unknown_pct = (n_unknown / n_total) * 100
+        
         n_unknown_train = int(n_unknown * train_frac)
         n_unknown_val = int(n_unknown * val_frac)
         
@@ -152,7 +155,13 @@ def create_cluster_splits(
         val_indices.extend(unknown_indices[n_unknown_train:n_unknown_train + n_unknown_val])
         test_indices.extend(unknown_indices[n_unknown_train + n_unknown_val:])
         
-        print(f"⚠️  {len(unknown_indices)} 个样本未在聚类文件中找到，按比例分配")
+        print(f"\n{'!' * 50}")
+        print(f"⚠️  WARNING: {len(unknown_indices)} 个样本未在聚类文件中找到！")
+        print(f"   这占总数据集的 {unknown_pct:.1f}%")
+        print(f"   这些样本将按比例分配到各个分割中")
+        if unknown_pct > 10:
+            print(f"   ⚠️  缺失样本超过 10%，请检查聚类文件是否匹配训练数据！")
+        print(f"{'!' * 50}\n")
     
     # Print statistics
     print("\n" + "=" * 50)

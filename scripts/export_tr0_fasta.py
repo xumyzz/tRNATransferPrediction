@@ -12,13 +12,14 @@ import os
 import sys
 
 
-def parse_bprna_files(data_dir, max_len=300):
+def parse_bprna_files(data_dir, max_len=300, max_n_ratio=0.2):
     """
     Parse bpRNA .st files and extract valid sequences.
     
     Args:
         data_dir: Directory containing .st files
         max_len: Maximum sequence length (default: 300)
+        max_n_ratio: Maximum ratio of N nucleotides allowed (default: 0.2)
     
     Returns:
         List of tuples (name, sequence) for valid entries
@@ -54,7 +55,7 @@ def parse_bprna_files(data_dir, max_len=300):
                 if line.startswith("#Name:") or line.startswith(">"):
                     # Save previous entry if complete
                     if state == 2 and 'name' in current_entry and 'seq' in current_entry and 'struct' in current_entry:
-                        if is_valid_entry(current_entry, max_len, stats):
+                        if is_valid_entry(current_entry, max_len, stats, max_n_ratio):
                             valid_entries.append((current_entry['name'], current_entry['seq']))
                     
                     # Reset for new entry
@@ -88,7 +89,7 @@ def parse_bprna_files(data_dir, max_len=300):
                     if any(c in "().[]{}<>" for c in line):
                         current_entry['struct'] = line
                         # Validate and save
-                        if is_valid_entry(current_entry, max_len, stats):
+                        if is_valid_entry(current_entry, max_len, stats, max_n_ratio):
                             valid_entries.append((current_entry['name'], current_entry['seq']))
                         current_entry = {}
                         state = 0
@@ -97,7 +98,7 @@ def parse_bprna_files(data_dir, max_len=300):
             
             # Don't forget last entry
             if 'name' in current_entry and 'seq' in current_entry and 'struct' in current_entry:
-                if is_valid_entry(current_entry, max_len, stats):
+                if is_valid_entry(current_entry, max_len, stats, max_n_ratio):
                     valid_entries.append((current_entry['name'], current_entry['seq']))
         
         except Exception as e:
@@ -113,7 +114,7 @@ def parse_bprna_files(data_dir, max_len=300):
     return valid_entries
 
 
-def is_valid_entry(entry, max_len, stats):
+def is_valid_entry(entry, max_len, stats, max_n_ratio=0.2):
     """
     Validate an entry using same criteria as training.
     
@@ -121,6 +122,7 @@ def is_valid_entry(entry, max_len, stats):
         entry: Dict with 'name', 'seq', 'struct' keys
         max_len: Maximum length threshold
         stats: Dict to update statistics
+        max_n_ratio: Maximum ratio of N nucleotides allowed (default: 0.2)
     
     Returns:
         True if valid, False otherwise
@@ -139,8 +141,8 @@ def is_valid_entry(entry, max_len, stats):
         stats["error"] += 1
         return False
     
-    # 3. N content check (allow 20% N)
-    if seq.count('N') / len(seq) > 0.2:
+    # 3. N content check (configurable threshold)
+    if seq.count('N') / len(seq) > max_n_ratio:
         stats["error"] += 1
         return False
     
@@ -205,6 +207,12 @@ Example usage:
         help='Maximum sequence length (default: 300)'
     )
     parser.add_argument(
+        '--max_n_ratio',
+        type=float,
+        default=0.2,
+        help='Maximum ratio of N nucleotides allowed (default: 0.2)'
+    )
+    parser.add_argument(
         '--out_fasta',
         type=str,
         required=True,
@@ -225,7 +233,7 @@ Example usage:
         sys.exit(1)
     
     # Parse files
-    entries = parse_bprna_files(args.data_dir, args.max_len)
+    entries = parse_bprna_files(args.data_dir, args.max_len, args.max_n_ratio)
     
     if not entries:
         print("❌ 未找到有效序列")
