@@ -4,6 +4,14 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 
+# Import Config for shared constants
+try:
+    from .config import Config
+    DEFAULT_MAX_N_RATIO = Config.MAX_N_RATIO
+except (ImportError, AttributeError):
+    # Fallback if config not available or running as standalone
+    DEFAULT_MAX_N_RATIO = 0.2
+
 
 # --- 1. 保持 BpRNAProcessor 不变 ---
 class BpRNAProcessor:
@@ -158,6 +166,12 @@ class MultiFileDatasetUpgrade(Dataset):
 
                         # 重置状态，开始新的一条
                         current_entry = {}
+                        # Extract name from the line
+                        if line.startswith("#Name:"):
+                            current_entry['name'] = line.split(":", 1)[1].strip()
+                        else:  # starts with ">"
+                            # Extract name up to first whitespace
+                            current_entry['name'] = line[1:].split()[0] if len(line) > 1 else "unknown"
                         state = 1  # 下一步该找 Seq 了
                         continue
 
@@ -223,7 +237,7 @@ class MultiFileDatasetUpgrade(Dataset):
             return
 
         # 3. 内容检查 (允许 20% 的 N，因为预训练不用太严)
-        if seq.count('N') / len(seq) > 0.2:
+        if seq.count('N') / len(seq) > DEFAULT_MAX_N_RATIO:
             stats["error"] += 1
             return
 
@@ -239,3 +253,7 @@ class MultiFileDatasetUpgrade(Dataset):
         s_ten = self.processor.seq_to_onehot(e['seq'])
         l_mat = self.processor.struct_to_matrix(e['struct'])
         return s_ten, l_mat
+    
+    def get_name(self, idx):
+        """Get the name/identifier of a sample by index."""
+        return self.data[idx].get('name', f'unknown_{idx}')

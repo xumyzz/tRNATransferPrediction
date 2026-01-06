@@ -1,7 +1,7 @@
 import torch
 import torch.optim as optim
 import torch.nn as nn
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader, random_split, Subset
 import os
 
 # --- 导入我们拆分好的模块 ---
@@ -10,8 +10,9 @@ from .utils import compute_masked_loss, calculate_f1  # 导入工具函数
 from .dataset import MultiFileDataset, collate_pad,MultiFileDatasetUpgrade  # 假设你已经有了这个文件
 # from .model import SpotRNAWithLSTM  # 假设你已经有了这个文件
 from .model import SpotRNA_LSTM_Refined
+from .cluster_split import parse_cdhit_clstr, create_cluster_splits, save_split_config
 
-def train():
+def train(clstr_path=None, split_seed=42, train_frac=0.8, val_frac=0.1, split_out=None):
     print(f"使用设备: {Config.DEVICE}")
 
     # --- 1. 准备数据 ---
@@ -22,11 +23,43 @@ def train():
         print("错误：没有数据，请检查路径。")
         return
 
-    # 划分验证集
-    train_len = int(0.9 * len(full_ds))
-    val_len = len(full_ds) - train_len
-    # 使用 random_split
-    train_ds, val_ds = random_split(full_ds, [train_len, val_len])
+    # 划分验证集 - 使用聚类分割或随机分割
+    if clstr_path and os.path.exists(clstr_path):
+        print(f"\n🔬 使用聚类文件进行无泄漏分割: {clstr_path}")
+        
+        # Parse cluster file
+        name_to_cluster = parse_cdhit_clstr(clstr_path)
+        
+        # Create cluster-based splits
+        train_indices, val_indices, test_indices = create_cluster_splits(
+            full_ds, 
+            name_to_cluster,
+            train_frac=train_frac,
+            val_frac=val_frac,
+            seed=split_seed
+        )
+        
+        # Create Subset datasets
+        train_ds = Subset(full_ds, train_indices)
+        val_ds = Subset(full_ds, val_indices)
+        
+        # Save split configuration if requested
+        if split_out:
+            metadata = {
+                "clstr_path": clstr_path,
+                "split_seed": split_seed,
+                "train_frac": train_frac,
+                "val_frac": val_frac,
+                "n_clusters": len(set(name_to_cluster.values())),
+                "max_len": Config.MAX_LEN
+            }
+            save_split_config(split_out, train_indices, val_indices, test_indices, metadata)
+    else:
+        print("\n🎲 使用随机分割 (未指定聚类文件)")
+        train_len = int(0.9 * len(full_ds))
+        val_len = len(full_ds) - train_len
+        # 使用 random_split
+        train_ds, val_ds = random_split(full_ds, [train_len, val_len])
 
     train_loader = DataLoader(train_ds, batch_size=Config.BATCH_SIZE, shuffle=True, collate_fn=collate_pad)
     val_loader = DataLoader(val_ds, batch_size=Config.BATCH_SIZE, shuffle=False, collate_fn=collate_pad)
