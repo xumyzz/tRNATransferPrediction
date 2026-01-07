@@ -31,39 +31,7 @@ from src.config import Config
 from src.utils import compute_masked_loss, calculate_f1
 from src.dataset import MultiFileDatasetUpgrade, collate_pad
 from src.model import SpotRNA_LSTM_Refined
-
-
-def parse_cd_hit_clusters(clstr_path):
-    """
-    Parse cd-hit-est .clstr output file.
-    
-    Returns:
-        List of clusters, where each cluster is a list of sequence names.
-    """
-    clusters = []
-    current_cluster = []
-    
-    with open(clstr_path, 'r') as f:
-        for line in f:
-            line = line.strip()
-            if line.startswith('>Cluster'):
-                if current_cluster:
-                    clusters.append(current_cluster)
-                current_cluster = []
-            else:
-                # Parse sequence name from cluster entry
-                # Format: "0	123nt, >seq_name... at 100%"
-                if '>' in line:
-                    name_part = line.split('>')[1]
-                    # Remove trailing "..." or "*" and whitespace
-                    name = name_part.split('.')[0].strip()
-                    current_cluster.append(name)
-        
-        # Add last cluster
-        if current_cluster:
-            clusters.append(current_cluster)
-    
-    return clusters
+from scripts.cluster_utils import parse_cd_hit_clusters
 
 
 def create_cluster_split(dataset, clstr_path, train_frac, val_frac, seed=42):
