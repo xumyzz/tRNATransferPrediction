@@ -117,118 +117,189 @@ def collate_pad(batch):
 
 
 class MultiFileDatasetUpgrade(Dataset):
-    def __init__(self, data_dir_or_file, max_len=600):
+    """
+    Dataset that supports both .st and .dbn formats with robust parsing.
+    Tracks sample names for clustering and export.
+    
+    Formats supported:
+    - .st: bpRNA format with #Name: header
+    - .dbn: FASTA-like format with > header, sequence, dot-bracket structure
+    """
+    def __init__(self, data_dir_or_file, max_len=600, n_threshold=0.2):
         self.processor = BpRNAProcessor()
         self.data = []
+        self.names = []  # Track names for each sample
+        self.max_len = max_len
+        self.n_threshold = n_threshold
 
-        # 1. 获取文件列表
+        # 1. Get file list
         if os.path.isfile(data_dir_or_file):
             file_list = [data_dir_or_file]
+        elif os.path.isdir(data_dir_or_file):
+            # Support both .st and .dbn files
+            st_files = sorted(glob.glob(os.path.join(data_dir_or_file, "*.st")))
+            dbn_files = sorted(glob.glob(os.path.join(data_dir_or_file, "*.dbn")))
+            file_list = st_files + dbn_files
         else:
-            file_list = sorted(glob.glob(os.path.join(data_dir_or_file, "*.dbn")))
-            # 如果找不到 .dbn，试试 .st (你刚才提到的后缀)
-            if not file_list:
-                file_list = sorted(glob.glob(os.path.join(data_dir_or_file, "*.st")))
+            raise ValueError(f"Invalid path: {data_dir_or_file} (path does not exist or is not a file or directory)")
 
-        print(f"🧐 正在扫描 {len(file_list)} 个文件 (MaxLen={max_len})...")
+        print(f"🧐 Scanning {len(file_list)} files (MaxLen={max_len})...")
 
-        # 统计计数
-        stats = {"total": 0, "kept": 0, "long": 0, "error": 0}
+        # Statistics
+        stats = {
+            "total": 0, 
+            "kept": 0, 
+            "too_long": 0, 
+            "length_mismatch": 0,
+            "too_many_n": 0,
+            "invalid_bases": 0,
+            "parse_error": 0
+        }
 
         for fpath in file_list:
             try:
-                with open(fpath, 'r', encoding='utf-8', errors='ignore') as f:
-                    # 预处理：去掉纯空行
-                    lines = [line.strip() for line in f if line.strip()]
-
-                # === 核心解析状态机 ===
-                # state 0: 找 Name
-                # state 1: 找 Seq (纯字母)
-                # state 2: 找 Struct (含括号)
-
-                current_entry = {}
-                state = 0
-
-                for line in lines:
-                    # 1. 如果遇到 #Name: 或 >，说明是一条新数据的开始
-                    if line.startswith("#Name:") or line.startswith(">"):
-                        # 如果上一条数据还没存，先存上一条 (如果有的话)
-                        if state == 2 and 'seq' in current_entry and 'struct' in current_entry:
-                            self._add_if_valid(current_entry, max_len, stats)
-
-                        # 重置状态，开始新的一条
-                        current_entry = {}
-                        state = 1  # 下一步该找 Seq 了
-                        continue
-
-                    # 2. 如果是注释行 (#Length, #PageNumber)，直接跳过
-                    if line.startswith("#"):
-                        continue
-
-                    # 3. 找序列 (State 1)
-                    if state == 1:
-                        # 启发式判断：如果包含括号，那说明漏掉了 Seq，直接变成 Struct 了 (格式错误)
-                        if any(c in "().[]{}<>" for c in line):
-                            # 尝试补救：如果是第一行就是结构，那这数据没法要
-                            state = 0
-                            continue
-
-                        # 正常的序列应该只包含字母
-                        # 你的数据里有 'AGAG...'
-                        current_entry['seq'] = line.upper().replace('T', 'U')
-                        state = 2  # 下一步找 Struct
-                        continue
-
-                    # 4. 找结构 (State 2)
-                    if state == 2:
-                        # 结构行特征：包含括号或点
-                        if any(c in "().[]{}<>" for c in line):
-                            current_entry['struct'] = line
-                            # 找到了完整的一对，尝试保存
-                            self._add_if_valid(current_entry, max_len, stats)
-                            # 保存完归零，准备找下一个 Name
-                            current_entry = {}
-                            state = 0
-                        else:
-                            # 到了 State 2 却没看到括号，可能是多行序列？暂不处理复杂情况
-                            state = 0
-
-                # 循环结束，别忘了最后一条
-                if 'seq' in current_entry and 'struct' in current_entry:
-                    self._add_if_valid(current_entry, max_len, stats)
-
+                # Determine format by extension
+                if fpath.endswith('.st'):
+                    self._parse_st_file(fpath, stats)
+                elif fpath.endswith('.dbn'):
+                    self._parse_dbn_file(fpath, stats)
             except Exception as e:
-                print(f"⚠️ 读取 {os.path.basename(fpath)} 失败: {e}")
+                print(f"⚠️ Error reading {os.path.basename(fpath)}: {e}")
+                stats["parse_error"] += 1
 
-        print("\n" + "=" * 30)
-        print(f"📊 加载报告 (MaxLen={max_len})")
-        print(f"✅ 最终入库: {stats['kept']}")
-        print(f"❌ 超长丢弃: {stats['long']}")
-        print(f"❌ 格式/N多: {stats['error']}")
-        print("=" * 30 + "\n")
+        print("\n" + "=" * 50)
+        print(f"📊 Loading Report (MaxLen={max_len})")
+        print(f"✅ Total kept: {stats['kept']}")
+        print(f"❌ Too long: {stats['too_long']}")
+        print(f"❌ Length mismatch: {stats['length_mismatch']}")
+        print(f"❌ Too many Ns: {stats['too_many_n']}")
+        print(f"❌ Invalid bases: {stats['invalid_bases']}")
+        print(f"❌ Parse errors: {stats['parse_error']}")
+        print("=" * 50 + "\n")
 
-    def _add_if_valid(self, entry, max_len, stats):
+    def _parse_st_file(self, fpath, stats):
+        """Parse bpRNA .st format files"""
+        with open(fpath, 'r', encoding='utf-8', errors='ignore') as f:
+            lines = [line.rstrip() for line in f]
+        
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
+            
+            # Look for #Name: header
+            if line.startswith("#Name:"):
+                name = line[6:].strip()
+                
+                # Skip other comment lines
+                i += 1
+                while i < len(lines) and lines[i].strip().startswith("#"):
+                    i += 1
+                
+                # Next should be sequence
+                if i >= len(lines):
+                    break
+                seq_line = lines[i].strip()
+                
+                # Next should be structure
+                i += 1
+                if i >= len(lines):
+                    break
+                struct_line = lines[i].strip()
+                
+                # Validate and add
+                self._add_if_valid({
+                    'name': name,
+                    'seq': seq_line.upper().replace('T', 'U'),
+                    'struct': struct_line
+                }, stats)
+            i += 1
+
+    def _parse_dbn_file(self, fpath, stats):
+        """Parse .dbn format files (FASTA-like with dot-bracket)"""
+        with open(fpath, 'r', encoding='utf-8', errors='ignore') as f:
+            lines = [line.rstrip() for line in f]
+        
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
+            
+            # Skip empty lines
+            if not line:
+                i += 1
+                continue
+            
+            # Look for header line starting with >
+            if line.startswith(">"):
+                name = line[1:].strip()
+                if not name:
+                    # Use a default name with line number
+                    name = f"seq_{i+1}"
+                
+                # Next non-empty line should be sequence
+                i += 1
+                seq_line = ""
+                while i < len(lines):
+                    line = lines[i].strip()
+                    if line:
+                        seq_line = line
+                        break
+                    i += 1
+                
+                if not seq_line:
+                    break
+                
+                # Next non-empty line should be structure
+                i += 1
+                struct_line = ""
+                while i < len(lines):
+                    line = lines[i].strip()
+                    if line:
+                        struct_line = line
+                        break
+                    i += 1
+                
+                if not struct_line:
+                    break
+                
+                # Validate and add
+                self._add_if_valid({
+                    'name': name,
+                    'seq': seq_line.upper().replace('T', 'U'),
+                    'struct': struct_line
+                }, stats)
+            i += 1
+
+    def _add_if_valid(self, entry, stats):
+        """Validate entry and add if it passes all checks"""
         seq = entry['seq']
         struct = entry['struct']
+        name = entry.get('name', f'unknown_{stats["total"]}')
         stats["total"] += 1
 
-        # 1. 长度检查
-        if len(seq) > max_len:
-            stats["long"] += 1
+        # 1. Length check
+        if len(seq) > self.max_len:
+            stats["too_long"] += 1
             return
 
-        # 2. 长度匹配检查
+        # 2. Length match check
         if len(seq) != len(struct):
-            stats["error"] += 1
+            stats["length_mismatch"] += 1
             return
 
-        # 3. 内容检查 (允许 20% 的 N，因为预训练不用太严)
-        if seq.count('N') / len(seq) > 0.2:
-            stats["error"] += 1
+        # 3. Validate sequence only contains valid bases (A, C, G, U, N)
+        valid_bases = set('ACGUN')
+        if not all(c in valid_bases for c in seq):
+            stats["invalid_bases"] += 1
             return
 
-        # 4. 通过
-        self.data.append(entry)
+        # 4. N threshold check
+        if len(seq) > 0 and seq.count('N') / len(seq) > self.n_threshold:
+            stats["too_many_n"] += 1
+            return
+
+        # 5. All checks passed - add to dataset
+        self.data.append({'seq': seq, 'struct': struct})
+        self.names.append(name)
         stats["kept"] += 1
 
     def __len__(self):
@@ -239,3 +310,7 @@ class MultiFileDatasetUpgrade(Dataset):
         s_ten = self.processor.seq_to_onehot(e['seq'])
         l_mat = self.processor.struct_to_matrix(e['struct'])
         return s_ten, l_mat
+    
+    def get_name(self, idx):
+        """Get the name of a sample by index"""
+        return self.names[idx]
