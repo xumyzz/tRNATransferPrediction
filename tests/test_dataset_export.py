@@ -33,7 +33,7 @@ def test_st_parsing():
         # Import after file creation
         from scripts.export_bprna_fasta import parse_st_file
         
-        entries = list(parse_st_file(st_file, max_len=600, n_threshold=0.2))
+        entries = list(parse_st_file(st_file))
         assert len(entries) == 2, f"Expected 2 entries, got {len(entries)}"
         assert entries[0][0] == "test_seq1", f"Expected 'test_seq1', got {entries[0][0]}"
         assert entries[1][0] == "test_seq2", f"Expected 'test_seq2', got {entries[1][0]}"
@@ -63,7 +63,7 @@ def test_dbn_parsing():
     try:
         from scripts.export_bprna_fasta import parse_dbn_file
         
-        entries = list(parse_dbn_file(dbn_file, max_len=600, n_threshold=0.2))
+        entries = list(parse_dbn_file(dbn_file))
         assert len(entries) == 2, f"Expected 2 entries, got {len(entries)}"
         assert entries[0][0] == "seq_a", f"Expected 'seq_a', got {entries[0][0]}"
         assert entries[1][0] == "seq_b", f"Expected 'seq_b', got {entries[1][0]}"

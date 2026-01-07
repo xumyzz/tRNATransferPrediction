@@ -22,6 +22,7 @@ import torch.optim as optim
 import torch.nn as nn
 from torch.utils.data import DataLoader, Subset
 import os
+import sys
 import argparse
 import json
 import random
@@ -352,7 +353,22 @@ def main():
     if args.device is None:
         args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     else:
-        args.device = torch.device(args.device)
+        # Validate device string
+        device_str = args.device
+        try:
+            # Check if it's a valid CUDA device
+            if device_str.startswith('cuda'):
+                if ':' in device_str:
+                    # cuda:X format
+                    device_idx = int(device_str.split(':')[1])
+                    if device_idx >= torch.cuda.device_count():
+                        raise ValueError(f"CUDA device {device_idx} not available (only {torch.cuda.device_count()} devices)")
+                elif not torch.cuda.is_available():
+                    raise ValueError("CUDA requested but not available")
+            args.device = torch.device(device_str)
+        except (ValueError, RuntimeError) as e:
+            print(f"Error: Invalid device '{device_str}': {e}")
+            sys.exit(1)
     
     train_model(args)
 

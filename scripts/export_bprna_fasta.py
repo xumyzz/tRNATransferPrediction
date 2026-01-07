@@ -21,10 +21,9 @@ import sys
 import argparse
 import glob
 import json
-from pathlib import Path
 
 
-def parse_st_file(fpath, max_len, n_threshold):
+def parse_st_file(fpath):
     """Parse bpRNA .st format files and yield (name, seq, struct) tuples"""
     with open(fpath, 'r', encoding='utf-8', errors='ignore') as f:
         lines = [line.rstrip() for line in f]
@@ -57,7 +56,7 @@ def parse_st_file(fpath, max_len, n_threshold):
         i += 1
 
 
-def parse_dbn_file(fpath, max_len, n_threshold):
+def parse_dbn_file(fpath):
     """Parse .dbn format files and yield (name, seq, struct) tuples"""
     with open(fpath, 'r', encoding='utf-8', errors='ignore') as f:
         lines = [line.rstrip() for line in f]
@@ -201,9 +200,9 @@ def main():
                 
                 # Determine file type and parse
                 if fpath.endswith('.st'):
-                    entries = parse_st_file(fpath, args.max_len, args.n_threshold)
+                    entries = parse_st_file(fpath)
                 elif fpath.endswith('.dbn'):
-                    entries = parse_dbn_file(fpath, args.max_len, args.n_threshold)
+                    entries = parse_dbn_file(fpath)
                 else:
                     continue
                 
