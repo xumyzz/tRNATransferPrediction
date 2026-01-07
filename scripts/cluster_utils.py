@@ -36,8 +36,13 @@ def parse_cd_hit_clusters(clstr_path):
                 # Format: "0	123nt, >seq_name... at 100%"
                 if '>' in line:
                     name_part = line.split('>')[1]
-                    # Remove trailing "..." or "*" and whitespace
-                    name = name_part.split('.')[0].strip()
+                    # Remove trailing "..." and anything after it
+                    # Use rsplit to handle names with periods like "seq1.v2.final"
+                    if '...' in name_part:
+                        name = name_part.split('...')[0].strip()
+                    else:
+                        # Fallback: split on whitespace and take first part
+                        name = name_part.split()[0].strip()
                     current_cluster.append(name)
         
         # Add last cluster

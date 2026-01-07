@@ -364,7 +364,11 @@ def main():
                 
                 # If specific device index is specified, validate it
                 if ':' in device_str:
-                    device_idx = int(device_str.split(':')[1])
+                    # Extract and validate device index
+                    parts = device_str.split(':')
+                    if len(parts) != 2 or not parts[1].isdigit():
+                        raise ValueError(f"Invalid CUDA device format: '{device_str}'. Expected 'cuda' or 'cuda:N' where N is a digit")
+                    device_idx = int(parts[1])
                     if device_idx >= torch.cuda.device_count():
                         raise ValueError(f"CUDA device {device_idx} not available (only {torch.cuda.device_count()} devices)")
             
