@@ -61,6 +61,10 @@ def parse_dbn_file(fpath):
     with open(fpath, 'r', encoding='utf-8', errors='ignore') as f:
         lines = [line.rstrip() for line in f]
     
+    # Use filename for default names
+    basename = os.path.splitext(os.path.basename(fpath))[0]
+    seq_counter = 0
+    
     i = 0
     while i < len(lines):
         line = lines[i].strip()
@@ -74,8 +78,9 @@ def parse_dbn_file(fpath):
         if line.startswith(">"):
             name = line[1:].strip()
             if not name:
-                # Use a default name with line number
-                name = f"seq_{i+1}"
+                # Use a default name with filename and counter
+                seq_counter += 1
+                name = f"{basename}_seq_{seq_counter}"
             
             # Next non-empty line should be sequence
             i += 1
