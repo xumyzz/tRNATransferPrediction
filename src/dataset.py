@@ -141,7 +141,7 @@ class MultiFileDatasetUpgrade(Dataset):
             dbn_files = sorted(glob.glob(os.path.join(data_dir_or_file, "*.dbn")))
             file_list = st_files + dbn_files
         else:
-            raise ValueError(f"Invalid path: {data_dir_or_file} (not a file or directory)")
+            raise ValueError(f"Invalid path: {data_dir_or_file} (path does not exist or is not a file or directory)")
 
         print(f"🧐 Scanning {len(file_list)} files (MaxLen={max_len})...")
 

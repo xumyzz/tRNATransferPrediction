@@ -151,7 +151,7 @@ def collect_files(inputs):
             dbn_files = glob.glob(os.path.join(input_path, "*.dbn"))
             files.extend(st_files + dbn_files)
         else:
-            print(f"Warning: {input_path} is not a valid file or directory")
+            print(f"Warning: {input_path} does not exist or is not a valid file or directory - skipping")
     return sorted(files)
 
 

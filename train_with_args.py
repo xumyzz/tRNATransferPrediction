@@ -358,13 +358,16 @@ def main():
         try:
             # Check if it's a valid CUDA device
             if device_str.startswith('cuda'):
+                # First check if CUDA is available at all
+                if not torch.cuda.is_available():
+                    raise ValueError("CUDA requested but not available")
+                
+                # If specific device index is specified, validate it
                 if ':' in device_str:
-                    # cuda:X format
                     device_idx = int(device_str.split(':')[1])
                     if device_idx >= torch.cuda.device_count():
                         raise ValueError(f"CUDA device {device_idx} not available (only {torch.cuda.device_count()} devices)")
-                elif not torch.cuda.is_available():
-                    raise ValueError("CUDA requested but not available")
+            
             args.device = torch.device(device_str)
         except (ValueError, RuntimeError) as e:
             print(f"Error: Invalid device '{device_str}': {e}")
