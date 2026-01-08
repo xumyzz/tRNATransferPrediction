@@ -6,6 +6,9 @@ This script reads .st and .dbn files from specified inputs (files or directories
 validates sequences, and exports them to FASTA format with names matching the
 dataset's name field.
 
+Format detection is content-based, not extension-based. Files with .dbn
+extension may actually contain .st format data and will be parsed correctly.
+
 Usage:
     python scripts/export_bprna_fasta.py \
         --input data/bpRNA_CRW \
@@ -21,6 +24,14 @@ import sys
 import argparse
 import glob
 import json
+
+# Import format utilities
+try:
+    from format_utils import sniff_format, has_pseudoknot
+except ImportError:
+    # Try importing from scripts directory
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from format_utils import sniff_format, has_pseudoknot
 
 
 def parse_st_file(fpath):
@@ -112,7 +123,7 @@ def parse_dbn_file(fpath):
         i += 1
 
 
-def is_valid_entry(name, seq, struct, max_len, n_threshold, stats):
+def is_valid_entry(name, seq, struct, max_len, n_threshold, allow_pseudoknot, stats):
     """Validate an entry and update stats"""
     stats["total"] += 1
     
@@ -138,6 +149,11 @@ def is_valid_entry(name, seq, struct, max_len, n_threshold, stats):
     # N threshold check
     if len(seq) > 0 and seq.count('N') / len(seq) > n_threshold:
         stats["too_many_n"] += 1
+        return False, None, None
+    
+    # Pseudoknot check (if not allowed)
+    if not allow_pseudoknot and has_pseudoknot(struct):
+        stats["pseudoknot_filtered"] += 1
         return False, None, None
     
     stats["kept"] += 1
@@ -171,6 +187,8 @@ def main():
                         help='Maximum sequence length')
     parser.add_argument('--n_threshold', type=float, default=0.2,
                         help='Maximum proportion of N bases allowed')
+    parser.add_argument('--allow_pseudoknot', action='store_true',
+                        help='Allow structures with pseudoknot notation ([], {}, <>). Default is to filter them out.')
     parser.add_argument('--out_fasta', required=True,
                         help='Output FASTA file')
     parser.add_argument('--out_names', default=None,
@@ -183,6 +201,7 @@ def main():
     # Collect all files
     files = collect_files(args.input)
     print(f"Found {len(files)} files to process")
+    print(f"Pseudoknot filtering: {'disabled' if args.allow_pseudoknot else 'enabled'}")
     
     # Initialize stats
     stats = {
@@ -193,7 +212,10 @@ def main():
         "length_mismatch": 0,
         "too_many_n": 0,
         "invalid_bases": 0,
-        "parse_errors": 0
+        "parse_errors": 0,
+        "pseudoknot_filtered": 0,
+        "sniffed_st_in_dbn": 0,
+        "unknown_format_files": 0
     }
     
     # Process files and write FASTA
@@ -203,10 +225,22 @@ def main():
             try:
                 stats["files_read"] += 1
                 
-                # Determine file type and parse
-                if fpath.endswith('.st'):
+                # Determine format by content sniffing
+                sniffed = sniff_format(fpath)
+                
+                if sniffed is None:
+                    print(f"Warning: Unknown format in {os.path.basename(fpath)}")
+                    stats["unknown_format_files"] += 1
+                    continue
+                
+                # Track when .dbn files are actually .st format
+                if fpath.endswith('.dbn') and sniffed == 'st':
+                    stats["sniffed_st_in_dbn"] += 1
+                
+                # Parse based on sniffed format
+                if sniffed == 'st':
                     entries = parse_st_file(fpath)
-                elif fpath.endswith('.dbn'):
+                elif sniffed == 'dbn':
                     entries = parse_dbn_file(fpath)
                 else:
                     continue
@@ -214,7 +248,8 @@ def main():
                 # Process entries
                 for name, seq, struct in entries:
                     valid, normalized_seq, _ = is_valid_entry(
-                        name, seq, struct, args.max_len, args.n_threshold, stats
+                        name, seq, struct, args.max_len, args.n_threshold, 
+                        args.allow_pseudoknot, stats
                     )
                     
                     if valid:
@@ -250,7 +285,14 @@ def main():
     print(f"  - Length mismatch: {stats['length_mismatch']}")
     print(f"  - Too many Ns: {stats['too_many_n']}")
     print(f"  - Invalid bases: {stats['invalid_bases']}")
+    print(f"  - Pseudoknot filtered: {stats['pseudoknot_filtered']}")
     print(f"  - Parse errors: {stats['parse_errors']}")
+    if stats["sniffed_st_in_dbn"] > 0:
+        print(f"Info:")
+        print(f"  - .dbn files with .st format: {stats['sniffed_st_in_dbn']}")
+    if stats["unknown_format_files"] > 0:
+        print(f"Warning:")
+        print(f"  - Unknown format files: {stats['unknown_format_files']}")
     print("=" * 50)
     print(f"\nFASTA written to: {args.out_fasta}")
     if args.out_names:
