@@ -1,8 +1,16 @@
 import os
+import sys
 import glob
 import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
+
+# Add scripts directory to path for format_utils
+_script_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'scripts')
+if _script_dir not in sys.path:
+    sys.path.insert(0, _script_dir)
+
+from format_utils import sniff_format, has_pseudoknot
 
 
 # --- 1. 保持 BpRNAProcessor 不变 ---
@@ -124,13 +132,17 @@ class MultiFileDatasetUpgrade(Dataset):
     Formats supported:
     - .st: bpRNA format with #Name: header
     - .dbn: FASTA-like format with > header, sequence, dot-bracket structure
+    
+    Format detection is content-based, not extension-based. Files with .dbn
+    extension may actually contain .st format data and will be parsed correctly.
     """
-    def __init__(self, data_dir_or_file, max_len=600, n_threshold=0.2):
+    def __init__(self, data_dir_or_file, max_len=600, n_threshold=0.2, allow_pseudoknot=False):
         self.processor = BpRNAProcessor()
         self.data = []
         self.names = []  # Track names for each sample
         self.max_len = max_len
         self.n_threshold = n_threshold
+        self.allow_pseudoknot = allow_pseudoknot
 
         # 1. Get file list
         if os.path.isfile(data_dir_or_file):
@@ -143,7 +155,7 @@ class MultiFileDatasetUpgrade(Dataset):
         else:
             raise ValueError(f"Invalid path: {data_dir_or_file} (path does not exist or is not a file or directory)")
 
-        print(f"🧐 Scanning {len(file_list)} files (MaxLen={max_len})...")
+        print(f"🧐 Scanning {len(file_list)} files (MaxLen={max_len}, AllowPseudoknot={allow_pseudoknot})...")
 
         # Statistics
         stats = {
@@ -153,16 +165,32 @@ class MultiFileDatasetUpgrade(Dataset):
             "length_mismatch": 0,
             "too_many_n": 0,
             "invalid_bases": 0,
-            "parse_error": 0
+            "parse_error": 0,
+            "pseudoknot_filtered": 0,
+            "sniffed_st_in_dbn": 0,
+            "unknown_format_files": 0
         }
 
         for fpath in file_list:
             try:
-                # Determine format by extension
-                if fpath.endswith('.st'):
+                # Determine format by content sniffing
+                sniffed = sniff_format(fpath)
+                
+                if sniffed is None:
+                    print(f"⚠️ Unknown format in {os.path.basename(fpath)}")
+                    stats["unknown_format_files"] += 1
+                    continue
+                
+                # Track when .dbn files are actually .st format
+                if fpath.endswith('.dbn') and sniffed == 'st':
+                    stats["sniffed_st_in_dbn"] += 1
+                
+                # Parse based on sniffed format
+                if sniffed == 'st':
                     self._parse_st_file(fpath, stats)
-                elif fpath.endswith('.dbn'):
+                elif sniffed == 'dbn':
                     self._parse_dbn_file(fpath, stats)
+                    
             except Exception as e:
                 print(f"⚠️ Error reading {os.path.basename(fpath)}: {e}")
                 stats["parse_error"] += 1
@@ -174,7 +202,12 @@ class MultiFileDatasetUpgrade(Dataset):
         print(f"❌ Length mismatch: {stats['length_mismatch']}")
         print(f"❌ Too many Ns: {stats['too_many_n']}")
         print(f"❌ Invalid bases: {stats['invalid_bases']}")
+        print(f"❌ Pseudoknot filtered: {stats['pseudoknot_filtered']}")
         print(f"❌ Parse errors: {stats['parse_error']}")
+        if stats["sniffed_st_in_dbn"] > 0:
+            print(f"ℹ️  .dbn files with .st format: {stats['sniffed_st_in_dbn']}")
+        if stats["unknown_format_files"] > 0:
+            print(f"⚠️ Unknown format files: {stats['unknown_format_files']}")
         print("=" * 50 + "\n")
 
     def _parse_st_file(self, fpath, stats):
@@ -297,7 +330,12 @@ class MultiFileDatasetUpgrade(Dataset):
             stats["too_many_n"] += 1
             return
 
-        # 5. All checks passed - add to dataset
+        # 5. Pseudoknot check (if not allowed)
+        if not self.allow_pseudoknot and has_pseudoknot(struct):
+            stats["pseudoknot_filtered"] += 1
+            return
+
+        # 6. All checks passed - add to dataset
         self.data.append({'seq': seq, 'struct': struct})
         self.names.append(name)
         stats["kept"] += 1
