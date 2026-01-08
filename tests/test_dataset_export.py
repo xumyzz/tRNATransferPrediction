@@ -87,12 +87,14 @@ def test_validation():
         "too_long": 0,
         "length_mismatch": 0,
         "too_many_n": 0,
-        "invalid_bases": 0
+        "invalid_bases": 0,
+        "pseudoknot_filtered": 0
     }
     
     # Valid entry
     valid, seq, struct = is_valid_entry(
-        "test1", "ACGU", "(..)", max_len=10, n_threshold=0.2, stats=stats
+        "test1", "ACGU", "(..)", max_len=10, n_threshold=0.2, 
+        allow_pseudoknot=False, stats=stats
     )
     assert valid, "Should be valid"
     assert seq == "ACGU", "Sequence should be normalized"
@@ -102,7 +104,8 @@ def test_validation():
     stats_long = stats.copy()
     stats_long["total"] = 0
     valid, _, _ = is_valid_entry(
-        "test2", "ACGU"*100, "."*400, max_len=10, n_threshold=0.2, stats=stats_long
+        "test2", "ACGU"*100, "."*400, max_len=10, n_threshold=0.2, 
+        allow_pseudoknot=False, stats=stats_long
     )
     assert not valid, "Should reject too long"
     assert stats_long["too_long"] == 1, "Should count as too_long"
@@ -110,9 +113,10 @@ def test_validation():
     
     # Length mismatch
     stats_mismatch = {"total": 0, "kept": 0, "too_long": 0, "length_mismatch": 0, 
-                      "too_many_n": 0, "invalid_bases": 0}
+                      "too_many_n": 0, "invalid_bases": 0, "pseudoknot_filtered": 0}
     valid, _, _ = is_valid_entry(
-        "test3", "ACGU", "...", max_len=10, n_threshold=0.2, stats=stats_mismatch
+        "test3", "ACGU", "...", max_len=10, n_threshold=0.2, 
+        allow_pseudoknot=False, stats=stats_mismatch
     )
     assert not valid, "Should reject length mismatch"
     assert stats_mismatch["length_mismatch"] == 1, "Should count as length_mismatch"
@@ -120,9 +124,10 @@ def test_validation():
     
     # Too many Ns
     stats_n = {"total": 0, "kept": 0, "too_long": 0, "length_mismatch": 0,
-               "too_many_n": 0, "invalid_bases": 0}
+               "too_many_n": 0, "invalid_bases": 0, "pseudoknot_filtered": 0}
     valid, _, _ = is_valid_entry(
-        "test4", "NNNN", "....", max_len=10, n_threshold=0.2, stats=stats_n
+        "test4", "NNNN", "....", max_len=10, n_threshold=0.2, 
+        allow_pseudoknot=False, stats=stats_n
     )
     assert not valid, "Should reject too many Ns"
     assert stats_n["too_many_n"] == 1, "Should count as too_many_n"
@@ -130,9 +135,10 @@ def test_validation():
     
     # Invalid bases
     stats_invalid = {"total": 0, "kept": 0, "too_long": 0, "length_mismatch": 0,
-                     "too_many_n": 0, "invalid_bases": 0}
+                     "too_many_n": 0, "invalid_bases": 0, "pseudoknot_filtered": 0}
     valid, _, _ = is_valid_entry(
-        "test5", "ACGX", "....", max_len=10, n_threshold=0.2, stats=stats_invalid
+        "test5", "ACGX", "....", max_len=10, n_threshold=0.2, 
+        allow_pseudoknot=False, stats=stats_invalid
     )
     assert not valid, "Should reject invalid bases"
     assert stats_invalid["invalid_bases"] == 1, "Should count as invalid_bases"
@@ -140,9 +146,10 @@ def test_validation():
     
     # T->U normalization
     stats_norm = {"total": 0, "kept": 0, "too_long": 0, "length_mismatch": 0,
-                  "too_many_n": 0, "invalid_bases": 0}
+                  "too_many_n": 0, "invalid_bases": 0, "pseudoknot_filtered": 0}
     valid, seq, _ = is_valid_entry(
-        "test6", "ACGT", "....", max_len=10, n_threshold=0.2, stats=stats_norm
+        "test6", "ACGT", "....", max_len=10, n_threshold=0.2, 
+        allow_pseudoknot=False, stats=stats_norm
     )
     assert valid, "Should accept with T"
     assert seq == "ACGU", f"T should be converted to U, got {seq}"

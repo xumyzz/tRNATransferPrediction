@@ -30,6 +30,10 @@ The default configuration is in `src/config.py`. Modify the paths and hyperparam
 
 The bpRNA-1m pretraining workflow uses cluster-based splitting to ensure that similar sequences are not split across train/val/test sets, preventing data leakage.
 
+**Important Notes:**
+- **Content-based format detection**: Files are parsed based on their content, not their extension. Some bpRNA downloads may have `.dbn` extension but contain `#Name:` records (bpRNA .st format). The system automatically detects and parses them correctly.
+- **Pseudoknot filtering**: By default, structures containing pseudoknot notation (`[]`, `{}`, `<>`) are filtered out. Use `--allow_pseudoknot` to keep them.
+
 #### Step 1: Export FASTA for Clustering
 
 Export sequences from your bpRNA dataset to FASTA format:
@@ -48,11 +52,12 @@ python scripts/export_bprna_fasta.py \
 **Options:**
 - `--input`: Can be specified multiple times; accepts files or directories
 - `--max_len`: Maximum sequence length (default: 600)
+- `--allow_pseudoknot`: Allow structures with pseudoknot notation (default: filter them out)
 - `--out_fasta`: Output FASTA file (required)
 - `--out_names`: Optional text file with sequence names (one per line)
 - `--stats_out`: Optional JSON file with filtering statistics
 
-The script automatically discovers `.st` and `.dbn` files in directories.
+The script automatically discovers `.st` and `.dbn` files in directories and detects their format by content.
 
 #### Step 2: Cluster Sequences with CD-HIT
 
@@ -151,7 +156,9 @@ GGGGCCCC
 (((()))).
 ```
 
-Both formats are automatically detected and parsed by the dataset loader.
+**Format Detection**: Both formats are automatically detected and parsed by the dataset loader based on content, not file extension. Files with `.dbn` extension may actually contain `.st` format data (starting with `#Name:`), and they will be parsed correctly.
+
+**Pseudoknot Notation**: Structures may contain pseudoknot brackets (`[]`, `{}`, `<>`) in addition to standard parentheses `()`. By default, entries with pseudoknots are filtered out during loading. To include them, use the `--allow_pseudoknot` flag (dataset) or set `allow_pseudoknot=True` (Python API). Note that the model may not handle pseudoknots correctly as they represent non-nested base pairs.
 
 ## Memory and Performance Optimization
 
