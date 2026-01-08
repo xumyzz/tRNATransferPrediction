@@ -112,8 +112,6 @@ def test_export_with_dbn_containing_st():
             f.write("((((())))) \n")  # Note: extra space to test trimming
         
         # Run export
-        import subprocess
-        
         out_fasta = os.path.join(tmpdir, "out.fasta")
         out_stats = os.path.join(tmpdir, "stats.json")
         
