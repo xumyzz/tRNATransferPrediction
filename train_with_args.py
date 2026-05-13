@@ -259,7 +259,7 @@ def train_model(args):
         avg_loss = total_loss / max(len(train_loader), 1)
         print(f"=== Epoch {epoch + 1} finished, Avg Loss: {avg_loss:.4f} ===")
 
-        # Validation phase
+          # Validation phase
         model.eval()
         val_loss = 0.0
         val_f1 = 0.0
@@ -267,7 +267,7 @@ def train_model(args):
         val_r = 0.0
 
         with torch.no_grad():
-            for seqs, labels, masks in val_loader:
+            for batch_idx_val, (seqs, labels, masks) in enumerate(val_loader):
                 seqs = seqs.to(args.device)
                 labels = labels.to(args.device)
                 masks = masks.to(args.device)
@@ -276,17 +276,49 @@ def train_model(args):
                 loss = compute_masked_loss(logits, labels, masks, pos_weight=args.pos_weight)
                 val_loss += loss.item()
 
-                f1, p, r = calculate_f1_postprocess_ufold(
-                    logits=logits,
-                    labels=labels,
-                    masks=masks,
-                    seqs=seqs,
-                    offset=args.pp_offset,
-                    min_loop=args.pp_min_loop
-                )
+                probs = torch.sigmoid(logits)
+
+                # ==========================================
+                # 🚀 极速 Raw F1 计算 (修复 Shape 维度爆炸问题)
+                # ==========================================
+                preds = (probs > args.pp_offset).float()
+                
+                # 解决 Mask 维度不匹配问题：把 1D 序列 mask 转换成 2D 矩阵 mask
+                if masks.dim() == 2:  # 如果 masks 是 [Batch, SeqLen]
+                    mask_2d = masks.unsqueeze(2) * masks.unsqueeze(1) # 变成 [Batch, SeqLen, SeqLen]
+                else:
+                    mask_2d = masks
+                
+                # 强行把 mask_2d 变成和 preds 绝对一模一样的形状
+                mask_2d = mask_2d.view_as(preds)
+                
+                # 只在有效区域内统计 (过滤掉 Padding 的垃圾区域)
+                preds = preds * mask_2d
+                labels_masked = labels * mask_2d
+                
+                # 统计真阳性、假阳性、假阴性
+                TP = (preds * labels_masked).sum().item()
+                FP = (preds * (1 - labels_masked) * mask_2d).sum().item()
+                FN = ((1 - preds) * labels_masked * mask_2d).sum().item()
+                
+                # 极速计算 P, R, F1 (加上 1e-8 防止分母为 0 报错)
+                p = TP / (TP + FP + 1e-8)
+                r = TP / (TP + FN + 1e-8)
+                f1 = 2 * p * r / (p + r + 1e-8)
+                
                 val_f1 += f1
                 val_p += p
                 val_r += r
+                # ==========================================
+
+                # 🔍 极简安全透视镜 (避免维度提取报错，直接看全 Batch 统计)
+                if batch_idx_val == 0:
+                    print("\n" + "="*20 + " 🔍 透视镜 " + "="*20)
+                    print(f"当前 Batch 最高预测概率: {probs.max().item():.4f}")
+                    print(f"当前 Batch 最低预测概率: {probs.min().item():.4f}")
+                    print(f"当前 Batch 平均预测概率: {probs.mean().item():.4f}")
+                    print(f"当前 Batch 的 Raw F1: {f1:.4f} (P: {p:.4f}, R: {r:.4f})")
+                    print("="*52 + "\n")
 
         avg_val_loss = val_loss / max(len(val_loader), 1)
         avg_val_f1 = val_f1 / max(len(val_loader), 1)

@@ -1,0 +1,491 @@
+Using device: cuda
+Configuration: {'data_dir': '/root/autodl-tmp/myPredicProject/tRNA_dataset', 'max_len': 128, 'clstr_path': '/root/autodl-tmp/myPredicProject/cluster/tRNA_datacluster/cluster_c80.clstr', 'train_frac': 0.85, 'val_frac': 0.1, 'split_out': None, 'batch_size': 8, 'accum_steps': 4, 'epochs': 50, 'lr': 5e-05, 'pos_weight': 5.0, 'weight_decay': 0.0001, 'resnet_layers': 8, 'hidden_dim': 64, 'lstm_hidden': 64, 'pretrained_path': '/root/autodl-tmp/myPredicProject/weight/dbnWeight/model_best.pth', 'pp_offset': 0.5, 'pp_min_loop': 4, 'save_dir': '/root/autodl-tmp/myPredicProject/weight/tRNA_Finetune', 'seed': 42, 'device': device(type='cuda')}
+
+Loading dataset from /root/autodl-tmp/myPredicProject/tRNA_dataset...
+🧐 Scanning 5945 files (MaxLen=128, AllowPseudoknot=False)...
+
+==================================================
+📊 Loading Report (MaxLen=128)
+✅ Total kept: 5936
+❌ Too long: 0
+❌ Length mismatch: 0
+❌ Too many Ns: 0
+❌ Invalid bases: 9
+❌ Pseudoknot filtered: 0
+❌ Parse errors: 0
+ℹ️  .dbn files with .st format: 5945
+==================================================
+
+Loaded 5936 sequences
+
+Creating cluster-based split from /root/autodl-tmp/myPredicProject/cluster/tRNA_datacluster/cluster_c80.clstr...
+Found 113 clusters
+Warning: 9 sequences in clusters not found in dataset
+Mapped to 112 non-empty clusters
+
+Split information:
+  total_sequences: 5936
+  total_clusters: 112
+  train_clusters: 95
+  val_clusters: 11
+  test_clusters: 6
+  train_sequences: 4953
+  val_sequences: 852
+  test_sequences: 131
+  train_frac_actual: 0.8344002695417789
+  val_frac_actual: 0.14353099730458221
+  test_frac_actual: 0.022068733153638814
+
+Initializing model...
+Loading pretrained weights from /root/autodl-tmp/myPredicProject/weight/dbnWeight/model_best.pth
+Weights loaded successfully!
+
+Starting training for 50 epochs...
+Batch size: 8, Gradient accumulation: 4
+Epoch [1/50] Step [0] Loss: 0.4961
+Epoch [1/50] Step [50] Loss: 0.1218
+Epoch [1/50] Step [100] Loss: 0.1691
+Epoch [1/50] Step [150] Loss: 0.1321
+Epoch [1/50] Step [200] Loss: 0.1951
+Epoch [1/50] Step [250] Loss: 0.0820
+Epoch [1/50] Step [300] Loss: 0.0836
+Epoch [1/50] Step [350] Loss: 0.0788
+Epoch [1/50] Step [400] Loss: 0.0914
+Epoch [1/50] Step [450] Loss: 0.0616
+Epoch [1/50] Step [500] Loss: 0.0647
+Epoch [1/50] Step [550] Loss: 0.0810
+Epoch [1/50] Step [600] Loss: 0.1087
+=== Epoch 1 finished, Avg Loss: 0.1289 ===
+
+==================== 🔍 透视镜 ====================
+当前 Batch 最高预测概率: 0.9955
+当前 Batch 最低预测概率: 0.0000
+当前 Batch 平均预测概率: 0.0390
+当前 Batch 的 Raw F1: 0.7560 (P: 0.6078, R: 1.0000)
+====================================================
+
+=== Validation Loss: 0.0456 | F1: 0.7717 | P: 0.6477 R: 0.9631 | pp_offset=0.5 min_loop=4 ===
+
+New best model saved with F1: 0.7717
+Epoch [2/50] Step [0] Loss: 0.0600
+Epoch [2/50] Step [50] Loss: 0.0366
+Epoch [2/50] Step [100] Loss: 0.0409
+Epoch [2/50] Step [150] Loss: 0.0687
+Epoch [2/50] Step [200] Loss: 0.0346
+Epoch [2/50] Step [250] Loss: 0.0507
+Epoch [2/50] Step [300] Loss: 0.0436
+Epoch [2/50] Step [350] Loss: 0.0397
+Epoch [2/50] Step [400] Loss: 0.0445
+Epoch [2/50] Step [450] Loss: 0.0363
+Epoch [2/50] Step [500] Loss: 0.0673
+Epoch [2/50] Step [550] Loss: 0.0384
+Epoch [2/50] Step [600] Loss: 0.0200
+=== Epoch 2 finished, Avg Loss: 0.0485 ===
+
+==================== 🔍 透视镜 ====================
+当前 Batch 最高预测概率: 0.9996
+当前 Batch 最低预测概率: 0.0000
+当前 Batch 平均预测概率: 0.0233
+当前 Batch 的 Raw F1: 0.8442 (P: 0.7304, R: 1.0000)
+====================================================
+
+=== Validation Loss: 0.0230 | F1: 0.8594 | P: 0.7604 R: 0.9919 | pp_offset=0.5 min_loop=4 ===
+
+New best model saved with F1: 0.8594
+Epoch [3/50] Step [0] Loss: 0.0275
+Epoch [3/50] Step [50] Loss: 0.0317
+Epoch [3/50] Step [100] Loss: 0.0254
+Epoch [3/50] Step [150] Loss: 0.0647
+Epoch [3/50] Step [200] Loss: 0.0162
+Epoch [3/50] Step [250] Loss: 0.0277
+Epoch [3/50] Step [300] Loss: 0.0203
+Epoch [3/50] Step [350] Loss: 0.0173
+Epoch [3/50] Step [400] Loss: 0.0177
+Epoch [3/50] Step [450] Loss: 0.0196
+Epoch [3/50] Step [500] Loss: 0.0195
+Epoch [3/50] Step [550] Loss: 0.1477
+Epoch [3/50] Step [600] Loss: 0.0159
+=== Epoch 3 finished, Avg Loss: 0.0310 ===
+
+==================== 🔍 透视镜 ====================
+当前 Batch 最高预测概率: 1.0000
+当前 Batch 最低预测概率: 0.0000
+当前 Batch 平均预测概率: 0.0152
+当前 Batch 的 Raw F1: 0.8889 (P: 0.8000, R: 1.0000)
+====================================================
+
+=== Validation Loss: 0.0120 | F1: 0.9001 | P: 0.8238 R: 0.9941 | pp_offset=0.5 min_loop=4 ===
+
+New best model saved with F1: 0.9001
+Epoch [4/50] Step [0] Loss: 0.0310
+Epoch [4/50] Step [50] Loss: 0.0193
+Epoch [4/50] Step [100] Loss: 0.0157
+Epoch [4/50] Step [150] Loss: 0.0093
+Epoch [4/50] Step [200] Loss: 0.0181
+Epoch [4/50] Step [250] Loss: 0.0139
+Epoch [4/50] Step [300] Loss: 0.0109
+Epoch [4/50] Step [350] Loss: 0.0111
+Epoch [4/50] Step [400] Loss: 0.0089
+Epoch [4/50] Step [450] Loss: 0.0174
+Epoch [4/50] Step [500] Loss: 0.0147
+Epoch [4/50] Step [550] Loss: 0.0140
+Epoch [4/50] Step [600] Loss: 0.0090
+=== Epoch 4 finished, Avg Loss: 0.0192 ===
+
+==================== 🔍 透视镜 ====================
+当前 Batch 最高预测概率: 1.0000
+当前 Batch 最低预测概率: 0.0000
+当前 Batch 平均预测概率: 0.0130
+当前 Batch 的 Raw F1: 0.9247 (P: 0.8600, R: 1.0000)
+====================================================
+
+=== Validation Loss: 0.0086 | F1: 0.9205 | P: 0.8556 R: 0.9974 | pp_offset=0.5 min_loop=4 ===
+
+New best model saved with F1: 0.9205
+Epoch [5/50] Step [0] Loss: 0.1123
+Epoch [5/50] Step [50] Loss: 0.0252
+Epoch [5/50] Step [100] Loss: 0.0106
+Epoch [5/50] Step [150] Loss: 0.0097
+Epoch [5/50] Step [200] Loss: 0.0119
+Epoch [5/50] Step [250] Loss: 0.0089
+Epoch [5/50] Step [300] Loss: 0.0205
+Epoch [5/50] Step [350] Loss: 0.0101
+Epoch [5/50] Step [400] Loss: 0.0071
+Epoch [5/50] Step [450] Loss: 0.0183
+Epoch [5/50] Step [500] Loss: 0.0088
+Epoch [5/50] Step [550] Loss: 0.0238
+Epoch [5/50] Step [600] Loss: 0.0065
+=== Epoch 5 finished, Avg Loss: 0.0142 ===
+
+==================== 🔍 透视镜 ====================
+当前 Batch 最高预测概率: 1.0000
+当前 Batch 最低预测概率: 0.0000
+当前 Batch 平均预测概率: 0.0126
+当前 Batch 的 Raw F1: 0.9173 (P: 0.8473, R: 1.0000)
+====================================================
+
+=== Validation Loss: 0.0077 | F1: 0.9326 | P: 0.8766 R: 0.9976 | pp_offset=0.5 min_loop=4 ===
+
+New best model saved with F1: 0.9326
+Epoch [6/50] Step [0] Loss: 0.0050
+Epoch [6/50] Step [50] Loss: 0.0067
+Epoch [6/50] Step [100] Loss: 0.0109
+Epoch [6/50] Step [150] Loss: 0.0281
+Epoch [6/50] Step [200] Loss: 0.0086
+Epoch [6/50] Step [250] Loss: 0.0067
+Epoch [6/50] Step [300] Loss: 0.0111
+Epoch [6/50] Step [350] Loss: 0.0086
+Epoch [6/50] Step [400] Loss: 0.0097
+Epoch [6/50] Step [450] Loss: 0.0133
+Epoch [6/50] Step [500] Loss: 0.0069
+Epoch [6/50] Step [550] Loss: 0.0066
+Epoch [6/50] Step [600] Loss: 0.0091
+=== Epoch 6 finished, Avg Loss: 0.0107 ===
+
+==================== 🔍 透视镜 ====================
+当前 Batch 最高预测概率: 1.0000
+当前 Batch 最低预测概率: 0.0000
+当前 Batch 平均预测概率: 0.0109
+当前 Batch 的 Raw F1: 0.9801 (P: 0.9609, R: 1.0000)
+====================================================
+
+=== Validation Loss: 0.0055 | F1: 0.9573 | P: 0.9207 R: 0.9979 | pp_offset=0.5 min_loop=4 ===
+
+New best model saved with F1: 0.9573
+Epoch [7/50] Step [0] Loss: 0.0070
+Epoch [7/50] Step [50] Loss: 0.0056
+Epoch [7/50] Step [100] Loss: 0.0039
+Epoch [7/50] Step [150] Loss: 0.0087
+Epoch [7/50] Step [200] Loss: 0.0085
+Epoch [7/50] Step [250] Loss: 0.0072
+Epoch [7/50] Step [300] Loss: 0.0209
+Epoch [7/50] Step [350] Loss: 0.0072
+Epoch [7/50] Step [400] Loss: 0.0056
+Epoch [7/50] Step [450] Loss: 0.0079
+Epoch [7/50] Step [500] Loss: 0.0050
+Epoch [7/50] Step [550] Loss: 0.0044
+Epoch [7/50] Step [600] Loss: 0.0073
+=== Epoch 7 finished, Avg Loss: 0.0090 ===
+
+==================== 🔍 透视镜 ====================
+当前 Batch 最高预测概率: 1.0000
+当前 Batch 最低预测概率: 0.0000
+当前 Batch 平均预测概率: 0.0107
+当前 Batch 的 Raw F1: 0.9829 (P: 0.9663, R: 1.0000)
+====================================================
+
+=== Validation Loss: 0.0052 | F1: 0.9581 | P: 0.9220 R: 0.9980 | pp_offset=0.5 min_loop=4 ===
+
+New best model saved with F1: 0.9581
+Epoch [8/50] Step [0] Loss: 0.0086
+Epoch [8/50] Step [50] Loss: 0.0048
+Epoch [8/50] Step [100] Loss: 0.0047
+Epoch [8/50] Step [150] Loss: 0.0119
+Epoch [8/50] Step [200] Loss: 0.0072
+Epoch [8/50] Step [250] Loss: 0.0111
+Epoch [8/50] Step [300] Loss: 0.0075
+Epoch [8/50] Step [350] Loss: 0.0082
+Epoch [8/50] Step [400] Loss: 0.0047
+Epoch [8/50] Step [450] Loss: 0.0086
+Epoch [8/50] Step [500] Loss: 0.0061
+Epoch [8/50] Step [550] Loss: 0.0036
+Epoch [8/50] Step [600] Loss: 0.0030
+=== Epoch 8 finished, Avg Loss: 0.0070 ===
+
+==================== 🔍 透视镜 ====================
+当前 Batch 最高预测概率: 1.0000
+当前 Batch 最低预测概率: 0.0000
+当前 Batch 平均预测概率: 0.0094
+当前 Batch 的 Raw F1: 0.9885 (P: 0.9773, R: 1.0000)
+====================================================
+
+=== Validation Loss: 0.0034 | F1: 0.9787 | P: 0.9608 R: 0.9981 | pp_offset=0.5 min_loop=4 ===
+
+New best model saved with F1: 0.9787
+Epoch [9/50] Step [0] Loss: 0.0051
+Epoch [9/50] Step [50] Loss: 0.0048
+Epoch [9/50] Step [100] Loss: 0.0104
+Epoch [9/50] Step [150] Loss: 0.0059
+Epoch [9/50] Step [200] Loss: 0.0049
+Epoch [9/50] Step [250] Loss: 0.0025
+Epoch [9/50] Step [300] Loss: 0.0075
+Epoch [9/50] Step [350] Loss: 0.0044
+Epoch [9/50] Step [400] Loss: 0.0071
+Epoch [9/50] Step [450] Loss: 0.0045
+Epoch [9/50] Step [500] Loss: 0.0055
+Epoch [9/50] Step [550] Loss: 0.0050
+Epoch [9/50] Step [600] Loss: 0.0035
+=== Epoch 9 finished, Avg Loss: 0.0062 ===
+
+==================== 🔍 透视镜 ====================
+当前 Batch 最高预测概率: 1.0000
+当前 Batch 最低预测概率: 0.0000
+当前 Batch 平均预测概率: 0.0099
+当前 Batch 的 Raw F1: 0.9942 (P: 0.9885, R: 1.0000)
+====================================================
+
+=== Validation Loss: 0.0040 | F1: 0.9786 | P: 0.9604 R: 0.9983 | pp_offset=0.5 min_loop=4 ===
+
+Epoch [10/50] Step [0] Loss: 0.0036
+Epoch [10/50] Step [50] Loss: 0.0062
+Epoch [10/50] Step [100] Loss: 0.0059
+Epoch [10/50] Step [150] Loss: 0.0036
+Epoch [10/50] Step [200] Loss: 0.0182
+Epoch [10/50] Step [250] Loss: 0.0042
+Epoch [10/50] Step [300] Loss: 0.0029
+Epoch [10/50] Step [350] Loss: 0.0062
+Epoch [10/50] Step [400] Loss: 0.0036
+Epoch [10/50] Step [450] Loss: 0.0153
+Epoch [10/50] Step [500] Loss: 0.0019
+Epoch [10/50] Step [550] Loss: 0.0043
+Epoch [10/50] Step [600] Loss: 0.0081
+=== Epoch 10 finished, Avg Loss: 0.0061 ===
+
+==================== 🔍 透视镜 ====================
+当前 Batch 最高预测概率: 1.0000
+当前 Batch 最低预测概率: 0.0000
+当前 Batch 平均预测概率: 0.0092
+当前 Batch 的 Raw F1: 0.9885 (P: 0.9773, R: 1.0000)
+====================================================
+
+=== Validation Loss: 0.0032 | F1: 0.9819 | P: 0.9665 R: 0.9983 | pp_offset=0.5 min_loop=4 ===
+
+New best model saved with F1: 0.9819
+Epoch [11/50] Step [0] Loss: 0.0016
+Epoch [11/50] Step [50] Loss: 0.0145
+Epoch [11/50] Step [100] Loss: 0.0054
+Epoch [11/50] Step [150] Loss: 0.0016
+Epoch [11/50] Step [200] Loss: 0.0026
+Epoch [11/50] Step [250] Loss: 0.0024
+Epoch [11/50] Step [300] Loss: 0.0124
+Epoch [11/50] Step [350] Loss: 0.0030
+Epoch [11/50] Step [400] Loss: 0.0051
+Epoch [11/50] Step [450] Loss: 0.0052
+Epoch [11/50] Step [500] Loss: 0.0069
+Epoch [11/50] Step [550] Loss: 0.0191
+Epoch [11/50] Step [600] Loss: 0.0083
+=== Epoch 11 finished, Avg Loss: 0.0050 ===
+
+==================== 🔍 透视镜 ====================
+当前 Batch 最高预测概率: 1.0000
+当前 Batch 最低预测概率: 0.0000
+当前 Batch 平均预测概率: 0.0086
+当前 Batch 的 Raw F1: 0.9942 (P: 0.9885, R: 1.0000)
+====================================================
+
+=== Validation Loss: 0.0025 | F1: 0.9839 | P: 0.9705 R: 0.9984 | pp_offset=0.5 min_loop=4 ===
+
+New best model saved with F1: 0.9839
+Epoch [12/50] Step [0] Loss: 0.0051
+Epoch [12/50] Step [50] Loss: 0.0018
+Epoch [12/50] Step [100] Loss: 0.0025
+Epoch [12/50] Step [150] Loss: 0.0443
+Epoch [12/50] Step [200] Loss: 0.0017
+Epoch [12/50] Step [250] Loss: 0.0051
+Epoch [12/50] Step [300] Loss: 0.0022
+Epoch [12/50] Step [350] Loss: 0.0101
+Epoch [12/50] Step [400] Loss: 0.0017
+Epoch [12/50] Step [450] Loss: 0.0029
+Epoch [12/50] Step [500] Loss: 0.0029
+Epoch [12/50] Step [550] Loss: 0.0056
+Epoch [12/50] Step [600] Loss: 0.0021
+=== Epoch 12 finished, Avg Loss: 0.0040 ===
+
+==================== 🔍 透视镜 ====================
+当前 Batch 最高预测概率: 1.0000
+当前 Batch 最低预测概率: 0.0000
+当前 Batch 平均预测概率: 0.0082
+当前 Batch 的 Raw F1: 1.0000 (P: 1.0000, R: 1.0000)
+====================================================
+
+=== Validation Loss: 0.0019 | F1: 0.9877 | P: 0.9779 R: 0.9982 | pp_offset=0.5 min_loop=4 ===
+
+New best model saved with F1: 0.9877
+Epoch [13/50] Step [0] Loss: 0.0043
+Epoch [13/50] Step [50] Loss: 0.0080
+Epoch [13/50] Step [100] Loss: 0.0016
+Epoch [13/50] Step [150] Loss: 0.0025
+Epoch [13/50] Step [200] Loss: 0.0052
+Epoch [13/50] Step [250] Loss: 0.0022
+Epoch [13/50] Step [300] Loss: 0.0017
+Epoch [13/50] Step [350] Loss: 0.0652
+Epoch [13/50] Step [400] Loss: 0.0101
+Epoch [13/50] Step [450] Loss: 0.0032
+Epoch [13/50] Step [500] Loss: 0.0035
+Epoch [13/50] Step [550] Loss: 0.0015
+Epoch [13/50] Step [600] Loss: 0.0026
+=== Epoch 13 finished, Avg Loss: 0.0037 ===
+
+==================== 🔍 透视镜 ====================
+当前 Batch 最高预测概率: 1.0000
+当前 Batch 最低预测概率: 0.0000
+当前 Batch 平均预测概率: 0.0083
+当前 Batch 的 Raw F1: 1.0000 (P: 1.0000, R: 1.0000)
+====================================================
+
+=== Validation Loss: 0.0020 | F1: 0.9873 | P: 0.9766 R: 0.9989 | pp_offset=0.5 min_loop=4 ===
+
+Epoch [14/50] Step [0] Loss: 0.0020
+Epoch [14/50] Step [50] Loss: 0.0018
+Epoch [14/50] Step [100] Loss: 0.0027
+Epoch [14/50] Step [150] Loss: 0.0032
+Epoch [14/50] Step [200] Loss: 0.0033
+Epoch [14/50] Step [250] Loss: 0.0014
+Epoch [14/50] Step [300] Loss: 0.0028
+Epoch [14/50] Step [350] Loss: 0.0033
+Epoch [14/50] Step [400] Loss: 0.0028
+Epoch [14/50] Step [450] Loss: 0.0021
+Epoch [14/50] Step [500] Loss: 0.0014
+Epoch [14/50] Step [550] Loss: 0.0015
+Epoch [14/50] Step [600] Loss: 0.0032
+=== Epoch 14 finished, Avg Loss: 0.0035 ===
+
+==================== 🔍 透视镜 ====================
+当前 Batch 最高预测概率: 1.0000
+当前 Batch 最低预测概率: 0.0000
+当前 Batch 平均预测概率: 0.0083
+当前 Batch 的 Raw F1: 1.0000 (P: 1.0000, R: 1.0000)
+====================================================
+
+=== Validation Loss: 0.0020 | F1: 0.9937 | P: 0.9894 R: 0.9982 | pp_offset=0.5 min_loop=4 ===
+
+New best model saved with F1: 0.9937
+Epoch [15/50] Step [0] Loss: 0.0017
+Epoch [15/50] Step [50] Loss: 0.0058
+Epoch [15/50] Step [100] Loss: 0.0018
+Epoch [15/50] Step [150] Loss: 0.0039
+Epoch [15/50] Step [200] Loss: 0.0032
+Epoch [15/50] Step [250] Loss: 0.0017
+Epoch [15/50] Step [300] Loss: 0.0014
+Epoch [15/50] Step [350] Loss: 0.0039
+Epoch [15/50] Step [400] Loss: 0.0023
+Epoch [15/50] Step [450] Loss: 0.0014
+Epoch [15/50] Step [500] Loss: 0.0024
+Epoch [15/50] Step [550] Loss: 0.0018
+Epoch [15/50] Step [600] Loss: 0.0027
+=== Epoch 15 finished, Avg Loss: 0.0029 ===
+
+==================== 🔍 透视镜 ====================
+当前 Batch 最高预测概率: 1.0000
+当前 Batch 最低预测概率: 0.0000
+当前 Batch 平均预测概率: 0.0079
+当前 Batch 的 Raw F1: 1.0000 (P: 1.0000, R: 1.0000)
+====================================================
+
+=== Validation Loss: 0.0015 | F1: 0.9916 | P: 0.9847 R: 0.9988 | pp_offset=0.5 min_loop=4 ===
+
+Epoch [16/50] Step [0] Loss: 0.0017
+Epoch [16/50] Step [50] Loss: 0.0025
+Epoch [16/50] Step [100] Loss: 0.0035
+Epoch [16/50] Step [150] Loss: 0.0013
+Epoch [16/50] Step [200] Loss: 0.0024
+Epoch [16/50] Step [250] Loss: 0.0008
+Epoch [16/50] Step [300] Loss: 0.0011
+Epoch [16/50] Step [350] Loss: 0.0024
+Epoch [16/50] Step [400] Loss: 0.0006
+Epoch [16/50] Step [450] Loss: 0.0010
+Epoch [16/50] Step [500] Loss: 0.0011
+Epoch [16/50] Step [550] Loss: 0.0018
+Epoch [16/50] Step [600] Loss: 0.0017
+=== Epoch 16 finished, Avg Loss: 0.0025 ===
+
+==================== 🔍 透视镜 ====================
+当前 Batch 最高预测概率: 1.0000
+当前 Batch 最低预测概率: 0.0000
+当前 Batch 平均预测概率: 0.0075
+当前 Batch 的 Raw F1: 1.0000 (P: 1.0000, R: 1.0000)
+====================================================
+
+=== Validation Loss: 0.0010 | F1: 0.9947 | P: 0.9909 R: 0.9987 | pp_offset=0.5 min_loop=4 ===
+
+New best model saved with F1: 0.9947
+Epoch [17/50] Step [0] Loss: 0.0011
+Epoch [17/50] Step [50] Loss: 0.0008
+Epoch [17/50] Step [100] Loss: 0.0012
+Epoch [17/50] Step [150] Loss: 0.0006
+Epoch [17/50] Step [200] Loss: 0.0037
+Epoch [17/50] Step [250] Loss: 0.0014
+Epoch [17/50] Step [300] Loss: 0.0013
+Epoch [17/50] Step [350] Loss: 0.0046
+Epoch [17/50] Step [400] Loss: 0.0012
+Epoch [17/50] Step [450] Loss: 0.0029
+Epoch [17/50] Step [500] Loss: 0.0022
+Epoch [17/50] Step [550] Loss: 0.0009
+Epoch [17/50] Step [600] Loss: 0.0012
+=== Epoch 17 finished, Avg Loss: 0.0024 ===
+
+==================== 🔍 透视镜 ====================
+当前 Batch 最高预测概率: 1.0000
+当前 Batch 最低预测概率: 0.0000
+当前 Batch 平均预测概率: 0.0079
+当前 Batch 的 Raw F1: 1.0000 (P: 1.0000, R: 1.0000)
+====================================================
+
+=== Validation Loss: 0.0015 | F1: 0.9912 | P: 0.9841 R: 0.9987 | pp_offset=0.5 min_loop=4 ===
+
+Epoch [18/50] Step [0] Loss: 0.0013
+Epoch [18/50] Step [50] Loss: 0.0020
+Epoch [18/50] Step [100] Loss: 0.0025
+Epoch [18/50] Step [150] Loss: 0.0031
+Epoch [18/50] Step [200] Loss: 0.0085
+Epoch [18/50] Step [250] Loss: 0.0023
+Epoch [18/50] Step [300] Loss: 0.0026
+Epoch [18/50] Step [350] Loss: 0.0012
+Epoch [18/50] Step [400] Loss: 0.0009
+Epoch [18/50] Step [450] Loss: 0.0008
+Epoch [18/50] Step [500] Loss: 0.0041
+Epoch [18/50] Step [550] Loss: 0.0017
+Epoch [18/50] Step [600] Loss: 0.0014
+=== Epoch 18 finished, Avg Loss: 0.0022 ===
+
+==================== 🔍 透视镜 ====================
+当前 Batch 最高预测概率: 1.0000
+当前 Batch 最低预测概率: 0.0000
+当前 Batch 平均预测概率: 0.0076
+当前 Batch 的 Raw F1: 1.0000 (P: 1.0000, R: 1.0000)
+====================================================
+
+=== Validation Loss: 0.0011 | F1: 0.9931 | P: 0.9877 R: 0.9988 | pp_offset=0.5 min_loop=4 ===
+
+Epoch [19/50] Step [0] Loss: 0.0011
+Epoch [19/50] Step [50] Loss: 0.0009
