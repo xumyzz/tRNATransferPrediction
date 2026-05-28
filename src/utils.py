@@ -1,5 +1,7 @@
 import torch
 from torch import nn
+import RNA
+import numpy as np
 
 
 def compute_masked_loss(logits, targets, masks, pos_weight=None):
@@ -59,3 +61,25 @@ def calculate_f1(logits, labels, masks):
     # 计算 F1 (加 1e-8 防止除以 0)
     f1 = 2 * tp / (2 * tp + fp + fn + 1e-8)
     return f1.item()
+
+def get_bppm_feature(seq):
+    """
+    使用 ViennaRNA 提取热力学配对概率矩阵 (BPPM)
+    返回 shape: (1, L, L) 的 Tensor
+    """
+    L = len(seq)
+    fc = RNA.fold_compound(seq)
+    
+    # 必须先调用 pf() 计算配分函数
+    fc.pf() 
+    
+    # 提取 BPPM (ViennaRNA 的索引是从 1 开始的)
+    bpp = fc.bpp() 
+    
+    matrix = np.zeros((L, L), dtype=np.float32)
+    for i in range(1, L + 1):
+        for j in range(i + 1, L + 1):
+            matrix[i-1, j-1] = bpp[i][j]
+            matrix[j-1, i-1] = bpp[i][j] # 保持对称
+            
+    return torch.tensor(matrix).unsqueeze(0) # 增加 channel 维度 -> (1, L, L)
