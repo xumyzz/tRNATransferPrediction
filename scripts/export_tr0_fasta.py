@@ -48,7 +48,7 @@ def main():
         allow_pseudoknot=args.allow_pseudoknot,
         out_fasta=args.out_fasta,
         out_names=args.out_names,
-        stats_out=args.stats_out
+        stats_out_path=args.stats_out
     )
 
 

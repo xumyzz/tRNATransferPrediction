@@ -51,7 +51,6 @@ MISSING_CLUSTER_WARNING_THRESHOLD = 0.1
 
 def create_cluster_split(dataset, clstr_path, train_frac, val_frac, split_seed=42):
     """Create cluster-based split and warn when >10% of cluster members are missing."""
-    # ... (保持原有的聚类分割代码完全不变) ...
     random.seed(split_seed)
     np.random.seed(split_seed)
 

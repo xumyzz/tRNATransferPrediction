@@ -176,7 +176,7 @@ def collect_files(inputs):
     return sorted(files)
 
 
-def run_export(inputs, max_len, n_threshold, allow_pseudoknot, out_fasta, out_names=None, stats_out=None):
+def run_export(inputs, max_len, n_threshold, allow_pseudoknot, out_fasta, out_names=None, stats_out_path=None):
     files = collect_files(inputs)
     print(f"Found {len(files)} files to process")
     print(f"Pseudoknot filtering: {'disabled' if allow_pseudoknot else 'enabled'}")
@@ -238,9 +238,9 @@ def run_export(inputs, max_len, n_threshold, allow_pseudoknot, out_fasta, out_na
             for name in names_list:
                 names_out.write(f"{name}\n")
     
-    if stats_out:
-        with open(stats_out, 'w') as stats_out_file:
-            json.dump(stats, stats_out_file, indent=2)
+    if stats_out_path:
+        with open(stats_out_path, 'w') as stats_out:
+            json.dump(stats, stats_out, indent=2)
     
     print("\n" + "=" * 50)
     print("Export Summary")
@@ -265,8 +265,8 @@ def run_export(inputs, max_len, n_threshold, allow_pseudoknot, out_fasta, out_na
     print(f"\nFASTA written to: {out_fasta}")
     if out_names:
         print(f"Names written to: {out_names}")
-    if stats_out:
-        print(f"Stats written to: {stats_out}")
+    if stats_out_path:
+        print(f"Stats written to: {stats_out_path}")
     
     return stats
 
@@ -299,7 +299,7 @@ def main():
         allow_pseudoknot=args.allow_pseudoknot,
         out_fasta=args.out_fasta,
         out_names=args.out_names,
-        stats_out=args.stats_out
+        stats_out_path=args.stats_out
     )
 
 
