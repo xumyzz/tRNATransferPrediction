@@ -45,6 +45,7 @@ def create_cluster_split(dataset, clstr_path, train_frac, val_frac, split_seed=4
     Create train/val/test split based on clusters.
 
     Ensures sequences from the same cluster stay together in the same split.
+    Logs a warning when more than 10% of cluster members are missing from the dataset.
 
     Args:
         dataset: Dataset with .names attribute

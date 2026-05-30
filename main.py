@@ -1,4 +1,4 @@
-# main.py
+"""Main entry point: use CLI args when provided, else Config defaults."""
 import sys
 
 from src.train import train, main as train_main

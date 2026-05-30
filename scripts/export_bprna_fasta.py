@@ -239,8 +239,8 @@ def run_export(inputs, max_len, n_threshold, allow_pseudoknot, out_fasta, out_na
                 names_out.write(f"{name}\n")
     
     if stats_out:
-        with open(stats_out, 'w') as stats_file:
-            json.dump(stats, stats_file, indent=2)
+        with open(stats_out, 'w') as stats_out_file:
+            json.dump(stats, stats_out_file, indent=2)
     
     print("\n" + "=" * 50)
     print("Export Summary")
