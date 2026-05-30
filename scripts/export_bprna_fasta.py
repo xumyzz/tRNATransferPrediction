@@ -176,6 +176,101 @@ def collect_files(inputs):
     return sorted(files)
 
 
+def run_export(inputs, max_len, n_threshold, allow_pseudoknot, out_fasta, out_names=None, stats_out_path=None):
+    files = collect_files(inputs)
+    print(f"Found {len(files)} files to process")
+    print(f"Pseudoknot filtering: {'disabled' if allow_pseudoknot else 'enabled'}")
+    
+    stats = {
+        "files_read": 0,
+        "total": 0,
+        "kept": 0,
+        "too_long": 0,
+        "length_mismatch": 0,
+        "too_many_n": 0,
+        "invalid_bases": 0,
+        "parse_errors": 0,
+        "pseudoknot_filtered": 0,
+        "sniffed_st_in_dbn": 0,
+        "unknown_format_files": 0
+    }
+    
+    names_list = []
+    with open(out_fasta, 'w') as fasta_out:
+        for fpath in files:
+            try:
+                stats["files_read"] += 1
+                
+                sniffed = sniff_format(fpath)
+                
+                if sniffed is None:
+                    print(f"Warning: Unknown format in {os.path.basename(fpath)}")
+                    stats["unknown_format_files"] += 1
+                    continue
+                
+                if fpath.endswith('.dbn') and sniffed == 'st':
+                    stats["sniffed_st_in_dbn"] += 1
+                
+                if sniffed == 'st':
+                    entries = parse_st_file(fpath)
+                elif sniffed == 'dbn':
+                    entries = parse_dbn_file(fpath)
+                else:
+                    continue
+                
+                for name, seq, struct in entries:
+                    valid, normalized_seq, _ = is_valid_entry(
+                        name, seq, struct, max_len, n_threshold,
+                        allow_pseudoknot, stats
+                    )
+                    
+                    if valid:
+                        fasta_out.write(f">{name}\n")
+                        fasta_out.write(f"{normalized_seq}\n")
+                        names_list.append(name)
+                        
+            except Exception as e:
+                print(f"Error processing {os.path.basename(fpath)}: {e}")
+                stats["parse_errors"] += 1
+    
+    if out_names:
+        with open(out_names, 'w') as names_out:
+            for name in names_list:
+                names_out.write(f"{name}\n")
+    
+    if stats_out_path:
+        with open(stats_out_path, 'w') as stats_out:
+            json.dump(stats, stats_out, indent=2)
+    
+    print("\n" + "=" * 50)
+    print("Export Summary")
+    print("=" * 50)
+    print(f"Files read: {stats['files_read']}")
+    print(f"Total records: {stats['total']}")
+    print(f"Records kept: {stats['kept']}")
+    print(f"Filtered out:")
+    print(f"  - Too long: {stats['too_long']}")
+    print(f"  - Length mismatch: {stats['length_mismatch']}")
+    print(f"  - Too many Ns: {stats['too_many_n']}")
+    print(f"  - Invalid bases: {stats['invalid_bases']}")
+    print(f"  - Pseudoknot filtered: {stats['pseudoknot_filtered']}")
+    print(f"  - Parse errors: {stats['parse_errors']}")
+    if stats["sniffed_st_in_dbn"] > 0:
+        print(f"Info:")
+        print(f"  - .dbn files with .st format: {stats['sniffed_st_in_dbn']}")
+    if stats["unknown_format_files"] > 0:
+        print(f"Warning:")
+        print(f"  - Unknown format files: {stats['unknown_format_files']}")
+    print("=" * 50)
+    print(f"\nFASTA written to: {out_fasta}")
+    if out_names:
+        print(f"Names written to: {out_names}")
+    if stats_out_path:
+        print(f"Stats written to: {stats_out_path}")
+    
+    return stats
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Export bpRNA dataset to FASTA format for clustering',
@@ -197,108 +292,15 @@ def main():
                         help='Output JSON file for statistics')
     
     args = parser.parse_args()
-    
-    # Collect all files
-    files = collect_files(args.input)
-    print(f"Found {len(files)} files to process")
-    print(f"Pseudoknot filtering: {'disabled' if args.allow_pseudoknot else 'enabled'}")
-    
-    # Initialize stats
-    stats = {
-        "files_read": 0,
-        "total": 0,
-        "kept": 0,
-        "too_long": 0,
-        "length_mismatch": 0,
-        "too_many_n": 0,
-        "invalid_bases": 0,
-        "parse_errors": 0,
-        "pseudoknot_filtered": 0,
-        "sniffed_st_in_dbn": 0,
-        "unknown_format_files": 0
-    }
-    
-    # Process files and write FASTA
-    names_list = []
-    with open(args.out_fasta, 'w') as fasta_out:
-        for fpath in files:
-            try:
-                stats["files_read"] += 1
-                
-                # Determine format by content sniffing
-                sniffed = sniff_format(fpath)
-                
-                if sniffed is None:
-                    print(f"Warning: Unknown format in {os.path.basename(fpath)}")
-                    stats["unknown_format_files"] += 1
-                    continue
-                
-                # Track when .dbn files are actually .st format
-                if fpath.endswith('.dbn') and sniffed == 'st':
-                    stats["sniffed_st_in_dbn"] += 1
-                
-                # Parse based on sniffed format
-                if sniffed == 'st':
-                    entries = parse_st_file(fpath)
-                elif sniffed == 'dbn':
-                    entries = parse_dbn_file(fpath)
-                else:
-                    continue
-                
-                # Process entries
-                for name, seq, struct in entries:
-                    valid, normalized_seq, _ = is_valid_entry(
-                        name, seq, struct, args.max_len, args.n_threshold, 
-                        args.allow_pseudoknot, stats
-                    )
-                    
-                    if valid:
-                        # Write to FASTA
-                        fasta_out.write(f">{name}\n")
-                        fasta_out.write(f"{normalized_seq}\n")
-                        names_list.append(name)
-                        
-            except Exception as e:
-                print(f"Error processing {os.path.basename(fpath)}: {e}")
-                stats["parse_errors"] += 1
-    
-    # Write names file if requested
-    if args.out_names:
-        with open(args.out_names, 'w') as names_out:
-            for name in names_list:
-                names_out.write(f"{name}\n")
-    
-    # Write stats if requested
-    if args.stats_out:
-        with open(args.stats_out, 'w') as stats_out:
-            json.dump(stats, stats_out, indent=2)
-    
-    # Print summary
-    print("\n" + "=" * 50)
-    print("Export Summary")
-    print("=" * 50)
-    print(f"Files read: {stats['files_read']}")
-    print(f"Total records: {stats['total']}")
-    print(f"Records kept: {stats['kept']}")
-    print(f"Filtered out:")
-    print(f"  - Too long: {stats['too_long']}")
-    print(f"  - Length mismatch: {stats['length_mismatch']}")
-    print(f"  - Too many Ns: {stats['too_many_n']}")
-    print(f"  - Invalid bases: {stats['invalid_bases']}")
-    print(f"  - Pseudoknot filtered: {stats['pseudoknot_filtered']}")
-    print(f"  - Parse errors: {stats['parse_errors']}")
-    if stats["sniffed_st_in_dbn"] > 0:
-        print(f"Info:")
-        print(f"  - .dbn files with .st format: {stats['sniffed_st_in_dbn']}")
-    if stats["unknown_format_files"] > 0:
-        print(f"Warning:")
-        print(f"  - Unknown format files: {stats['unknown_format_files']}")
-    print("=" * 50)
-    print(f"\nFASTA written to: {args.out_fasta}")
-    if args.out_names:
-        print(f"Names written to: {args.out_names}")
-    if args.stats_out:
-        print(f"Stats written to: {args.stats_out}")
+    run_export(
+        inputs=args.input,
+        max_len=args.max_len,
+        n_threshold=args.n_threshold,
+        allow_pseudoknot=args.allow_pseudoknot,
+        out_fasta=args.out_fasta,
+        out_names=args.out_names,
+        stats_out_path=args.stats_out
+    )
 
 
 if __name__ == '__main__':

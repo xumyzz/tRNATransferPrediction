@@ -46,11 +46,13 @@ except ImportError:
 from scripts.cluster_utils import parse_cd_hit_clusters
 from src.metrics import calculate_f1_postprocess_ufold
 
+MISSING_CLUSTER_WARNING_THRESHOLD = 0.1
 
-def create_cluster_split(dataset, clstr_path, train_frac, val_frac, seed=42):
-    # ... (保持原有的聚类分割代码完全不变) ...
-    random.seed(seed)
-    np.random.seed(seed)
+
+def create_cluster_split(dataset, clstr_path, train_frac, val_frac, split_seed=42):
+    """Create cluster-based split and warn when missing fraction exceeds MISSING_CLUSTER_WARNING_THRESHOLD."""
+    random.seed(split_seed)
+    np.random.seed(split_seed)
 
     clusters = parse_cd_hit_clusters(clstr_path)
     print(f"Found {len(clusters)} clusters")
@@ -70,7 +72,9 @@ def create_cluster_split(dataset, clstr_path, train_frac, val_frac, seed=42):
             cluster_indices.append(indices)
 
     if missing_count > 0:
-        print(f"Warning: {missing_count} sequences in clusters not found in dataset")
+        missing_ratio = missing_count / max(len(dataset), 1)
+        label = "Warning" if missing_ratio > MISSING_CLUSTER_WARNING_THRESHOLD else "Info"
+        print(f"{label}: {missing_count} sequences in clusters not found in dataset ({missing_ratio:.1%})")
 
     print(f"Mapped to {len(cluster_indices)} non-empty clusters")
 
@@ -125,8 +129,9 @@ def train_model(args):
 
     if args.clstr_path:
         print(f"\nCreating cluster-based split from {args.clstr_path}...")
+        split_seed = args.seed if args.split_seed is None else args.split_seed
         (train_idx, val_idx, test_idx), split_info = create_cluster_split(
-            full_ds, args.clstr_path, args.train_frac, args.val_frac, args.seed
+            full_ds, args.clstr_path, args.train_frac, args.val_frac, split_seed
         )
 
         print("\nSplit information:")
@@ -289,6 +294,36 @@ def train_model(args):
     print(f"\nTraining completed! Best validation F1: {best_val_f1:.4f}")
 
 
+def train():
+    """Train via train_model using Config defaults; split_seed stays None to default to seed."""
+    config = Config()
+    args = argparse.Namespace(
+        data_dir=config.DATA_DIR,
+        max_len=config.MAX_LEN,
+        clstr_path=None,
+        train_frac=0.8,
+        val_frac=0.1,
+        split_seed=None,
+        split_out=None,
+        batch_size=config.BATCH_SIZE,
+        accum_steps=config.ACCUM_STEPS,
+        epochs=config.EPOCHS,
+        lr=config.LR,
+        pos_weight=config.POS_WEIGHT,
+        weight_decay=config.WEIGHT_DECAY,
+        resnet_layers=config.RESNET_LAYERS,
+        hidden_dim=config.HIDDEN_DIM,
+        lstm_hidden=config.LSTM_HIDDEN,
+        pretrained_path=config.PRETRAINED_PATH,
+        pp_offset=0.5,
+        pp_min_loop=4,
+        save_dir=config.MODEL_SAVE_DIR,
+        seed=42,
+        device=config.DEVICE
+    )
+    train_model(args)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Train RNA structure prediction model with Mamba Refinement',
@@ -308,6 +343,8 @@ def main():
                         help='Fraction of data/clusters for training')
     parser.add_argument('--val_frac', type=float, default=0.1,
                         help='Fraction of data/clusters for validation')
+    parser.add_argument('--split_seed', type=int, default=None,
+                        help='Random seed for cluster splitting (defaults to --seed)')
     parser.add_argument('--split_out', type=str, default=None,
                         help='Output JSON file for split indices')
 

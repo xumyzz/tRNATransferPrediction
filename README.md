@@ -26,6 +26,28 @@ python main.py
 
 The default configuration is in `src/config.py`. Modify the paths and hyperparameters as needed.
 
+#### Optional: Leakage-safe TR0 split (cluster-based)
+
+```bash
+# Export TR0 sequences for clustering
+python scripts/export_tr0_fasta.py \
+    --data_dir data/TR0 \
+    --out_fasta tr0.fasta \
+    --out_names tr0_names.txt
+
+# Cluster at 95% identity
+cd-hit-est -i tr0.fasta -o tr0_cdhit95 -c 0.95 -n 10 -d 0
+
+# Train with cluster-based split
+python train_with_args.py \
+    --data_dir data/TR0 \
+    --max_len 300 \
+    --clstr_path tr0_cdhit95.clstr \
+    --train_frac 0.8 \
+    --val_frac 0.1 \
+    --split_out splits.json
+```
+
 ### Training on bpRNA-1m (Pretraining Workflow)
 
 The bpRNA-1m pretraining workflow uses cluster-based splitting to ensure that similar sequences are not split across train/val/test sets, preventing data leakage.

@@ -244,6 +244,55 @@ def test_export_integration():
         print(f"  ✓ Exported {stats['kept']} sequences")
 
 
+def test_tr0_export_script():
+    """Test TR0 export script defaults"""
+    print("\nTest 6: TR0 export script")
+    
+    with tempfile.TemporaryDirectory() as tmpdir:
+        st_file = os.path.join(tmpdir, "tr0_sample.st")
+        long_seq = "A" * 301
+        long_struct = "." * 301
+        with open(st_file, 'w') as f:
+            f.write("#Name: tr0_short\n")
+            f.write("#Length: 10\n")
+            f.write("ACGUACGUAC\n")
+            f.write("(((....)))\n")
+            f.write("#Name: tr0_long\n")
+            f.write("#Length: 301\n")
+            f.write(f"{long_seq}\n")
+            f.write(f"{long_struct}\n")
+        
+        out_fasta = os.path.join(tmpdir, "tr0.fasta")
+        out_stats = os.path.join(tmpdir, "tr0_stats.json")
+        
+        import subprocess
+        cmd = [
+            sys.executable,
+            "scripts/export_tr0_fasta.py",
+            "--data_dir", tmpdir,
+            "--out_fasta", out_fasta,
+            "--stats_out", out_stats
+        ]
+        
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=os.path.dirname(os.path.dirname(__file__)))
+        assert result.returncode == 0, f"Export failed: {result.stderr}"
+        
+        assert os.path.exists(out_fasta), "TR0 FASTA file should be created"
+        assert os.path.exists(out_stats), "TR0 stats file should be created"
+        
+        with open(out_fasta) as f:
+            fasta_content = f.read()
+            assert ">tr0_short" in fasta_content, "Should contain tr0_short"
+            assert ">tr0_long" not in fasta_content, "Should filter out tr0_long by default max_len"
+        
+        with open(out_stats) as f:
+            stats = json.load(f)
+            assert stats["kept"] == 1, f"Expected 1 kept sequence, got {stats['kept']}"
+            assert stats["too_long"] == 1, f"Expected 1 too_long sequence, got {stats['too_long']}"
+        
+        print("  ✓ TR0 export uses default max_len=300")
+
+
 def run_tests():
     """Run all tests"""
     print("=" * 60)
@@ -256,6 +305,7 @@ def run_tests():
         test_validation()
         test_cluster_parsing()
         test_export_integration()
+        test_tr0_export_script()
         
         print("\n" + "=" * 60)
         print("All tests passed! ✓")
