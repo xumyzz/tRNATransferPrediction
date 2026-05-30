@@ -46,6 +46,8 @@ except ImportError:
 from scripts.cluster_utils import parse_cd_hit_clusters
 from src.metrics import calculate_f1_postprocess_ufold
 
+MISSING_CLUSTER_WARNING_THRESHOLD = 0.1
+
 
 def create_cluster_split(dataset, clstr_path, train_frac, val_frac, split_seed=42):
     # ... (保持原有的聚类分割代码完全不变) ...
@@ -71,7 +73,7 @@ def create_cluster_split(dataset, clstr_path, train_frac, val_frac, split_seed=4
 
     if missing_count > 0:
         missing_ratio = missing_count / max(len(dataset), 1)
-        label = "Warning" if missing_ratio > 0.1 else "Info"
+        label = "Warning" if missing_ratio > MISSING_CLUSTER_WARNING_THRESHOLD else "Info"
         print(f"{label}: {missing_count} sequences in clusters not found in dataset ({missing_ratio:.1%})")
 
     print(f"Mapped to {len(cluster_indices)} non-empty clusters")
@@ -293,6 +295,7 @@ def train_model(args):
 
 
 def train():
+    """Train using Config defaults when no CLI arguments are provided."""
     config = Config()
     args = argparse.Namespace(
         data_dir=config.DATA_DIR,
