@@ -295,7 +295,7 @@ def train_model(args):
 
 
 def train():
-    """Train via train_model using Config defaults when no CLI arguments are provided."""
+    """Train via train_model using Config defaults; split_seed stays None to default to seed."""
     config = Config()
     args = argparse.Namespace(
         data_dir=config.DATA_DIR,
