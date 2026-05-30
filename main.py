@@ -1,5 +1,10 @@
 # main.py
-from src.train import train
+import sys
+
+from src.train import train, main as train_main
 
 if __name__ == '__main__':
-    train()
+    if len(sys.argv) > 1:
+        train_main()
+    else:
+        train()

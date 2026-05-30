@@ -38,7 +38,7 @@ from scripts.cluster_utils import parse_cd_hit_clusters
 from src.metrics import calculate_f1_postprocess_ufold
 
 
-def create_cluster_split(dataset, clstr_path, train_frac, val_frac, seed=42):
+def create_cluster_split(dataset, clstr_path, train_frac, val_frac, split_seed=42):
     """
     Create train/val/test split based on clusters.
 
@@ -54,8 +54,8 @@ def create_cluster_split(dataset, clstr_path, train_frac, val_frac, seed=42):
     Returns:
         (train_indices, val_indices, test_indices), split_info
     """
-    random.seed(seed)
-    np.random.seed(seed)
+    random.seed(split_seed)
+    np.random.seed(split_seed)
 
     # Parse clusters
     clusters = parse_cd_hit_clusters(clstr_path)
@@ -78,7 +78,9 @@ def create_cluster_split(dataset, clstr_path, train_frac, val_frac, seed=42):
             cluster_indices.append(indices)
 
     if missing_count > 0:
-        print(f"Warning: {missing_count} sequences in clusters not found in dataset")
+        missing_ratio = missing_count / max(len(dataset), 1)
+        label = "Warning" if missing_ratio > 0.1 else "Info"
+        print(f"{label}: {missing_count} sequences in clusters not found in dataset ({missing_ratio:.1%})")
 
     print(f"Mapped to {len(cluster_indices)} non-empty clusters")
 
@@ -139,8 +141,9 @@ def train_model(args):
     # Create data splits
     if args.clstr_path:
         print(f"\nCreating cluster-based split from {args.clstr_path}...")
+        split_seed = args.seed if args.split_seed is None else args.split_seed
         (train_idx, val_idx, test_idx), split_info = create_cluster_split(
-            full_ds, args.clstr_path, args.train_frac, args.val_frac, args.seed
+            full_ds, args.clstr_path, args.train_frac, args.val_frac, split_seed
         )
 
         print("\nSplit information:")
@@ -332,6 +335,8 @@ def main():
                         help='Fraction of data/clusters for training')
     parser.add_argument('--val_frac', type=float, default=0.1,
                         help='Fraction of data/clusters for validation')
+    parser.add_argument('--split_seed', type=int, default=None,
+                        help='Random seed for cluster splitting (defaults to --seed)')
     parser.add_argument('--split_out', type=str, default=None,
                         help='Output JSON file for split indices')
 
