@@ -42,3 +42,4 @@ Thumbs.db
 checkpoints/
 vis_results/
 goodPth/
+data/chimeras.pkl

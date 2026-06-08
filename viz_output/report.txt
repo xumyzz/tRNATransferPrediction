@@ -1,0 +1,73 @@
+
+=======================================================
+  1779 predictions
+  Length:          182 [158-208]
+  Total pairs:     71.7 +-6.6  [54-91]
+  5'<->3' cross:   12.1 +-1.8  [6-15]
+  cross ratio:     100.0%
+  Leak 5'<->ins:   mean=0.0 max=0
+  Leak ins<->3':   mean=0.0 max=0
+=======================================================
+
+Top 10 samples:
+
+==================================================
+[1] bpRNA_CRW_15563 (179nt)
+  total=73  tRNA5=11  ins=48  tRNA3=0
+  5'<->3' cross=14
+  cross pairs: [(np.int64(0), np.int64(178)), (np.int64(1), np.int64(177)), (np.int64(2), np.int64(168)), (np.int64(3), np.int64(167)), (np.int64(4), np.int64(166)), (np.int64(5), np.int64(173)), (np.int64(6), np.int64(164)), (np.int64(8), np.int64(175)), (np.int64(9), np.int64(174)), (np.int64(11), np.int64(169)), (np.int64(12), np.int64(165)), (np.int64(14), np.int64(172)), (np.int64(34), np.int64(171)), (np.int64(35), np.int64(170))]
+  leak: 5'<->ins=0  ins<->3'=0
+==================================================
+[2] bpRNA_CRW_15565 (192nt)
+  total=76  tRNA5=12  ins=52  tRNA3=1
+  5'<->3' cross=11
+  cross pairs: [(np.int64(0), np.int64(191)), (np.int64(1), np.int64(190)), (np.int64(2), np.int64(189)), (np.int64(3), np.int64(188)), (np.int64(4), np.int64(187)), (np.int64(8), np.int64(179)), (np.int64(9), np.int64(178)), (np.int64(11), np.int64(182)), (np.int64(12), np.int64(181)), (np.int64(14), np.int64(185)), (np.int64(19), np.int64(180))]
+  leak: 5'<->ins=0  ins<->3'=0
+==================================================
+[3] bpRNA_CRW_15567 (203nt)
+  total=78  tRNA5=10  ins=55  tRNA3=0
+  5'<->3' cross=13
+  cross pairs: [(np.int64(0), np.int64(202)), (np.int64(1), np.int64(201)), (np.int64(2), np.int64(200)), (np.int64(3), np.int64(199)), (np.int64(8), np.int64(189)), (np.int64(11), np.int64(198)), (np.int64(12), np.int64(197)), (np.int64(14), np.int64(195)), (np.int64(15), np.int64(194)), (np.int64(17), np.int64(190)), (np.int64(29), np.int64(192)), (np.int64(30), np.int64(191)), (np.int64(41), np.int64(193))]
+  leak: 5'<->ins=0  ins<->3'=0
+==================================================
+[4] bpRNA_CRW_15571 (171nt)
+  total=65  tRNA5=12  ins=40  tRNA3=1
+  5'<->3' cross=12
+  cross pairs: [(np.int64(0), np.int64(170)), (np.int64(1), np.int64(169)), (np.int64(2), np.int64(168)), (np.int64(3), np.int64(167)), (np.int64(4), np.int64(166)), (np.int64(5), np.int64(165)), (np.int64(6), np.int64(164)), (np.int64(8), np.int64(158)), (np.int64(9), np.int64(157)), (np.int64(11), np.int64(161)), (np.int64(12), np.int64(160)), (np.int64(19), np.int64(159))]
+  leak: 5'<->ins=0  ins<->3'=0
+==================================================
+[5] bpRNA_CRW_15645 (195nt)
+  total=75  tRNA5=8  ins=54  tRNA3=0
+  5'<->3' cross=13
+  cross pairs: [(np.int64(0), np.int64(194)), (np.int64(1), np.int64(193)), (np.int64(2), np.int64(192)), (np.int64(3), np.int64(191)), (np.int64(4), np.int64(190)), (np.int64(5), np.int64(189)), (np.int64(6), np.int64(188)), (np.int64(12), np.int64(181)), (np.int64(13), np.int64(180)), (np.int64(17), np.int64(186)), (np.int64(18), np.int64(187)), (np.int64(35), np.int64(185)), (np.int64(37), np.int64(183))]
+  leak: 5'<->ins=0  ins<->3'=0
+==================================================
+[6] bpRNA_CRW_15647 (176nt)
+  total=68  tRNA5=10  ins=45  tRNA3=0
+  5'<->3' cross=13
+  cross pairs: [(np.int64(0), np.int64(175)), (np.int64(1), np.int64(174)), (np.int64(2), np.int64(173)), (np.int64(3), np.int64(172)), (np.int64(4), np.int64(167)), (np.int64(5), np.int64(170)), (np.int64(6), np.int64(169)), (np.int64(13), np.int64(161)), (np.int64(17), np.int64(168)), (np.int64(18), np.int64(162)), (np.int64(21), np.int64(171)), (np.int64(25), np.int64(166)), (np.int64(29), np.int64(164))]
+  leak: 5'<->ins=0  ins<->3'=0
+==================================================
+[7] bpRNA_CRW_16025 (175nt)
+  total=64  tRNA5=7  ins=43  tRNA3=0
+  5'<->3' cross=14
+  cross pairs: [(np.int64(0), np.int64(174)), (np.int64(1), np.int64(173)), (np.int64(2), np.int64(172)), (np.int64(3), np.int64(171)), (np.int64(4), np.int64(170)), (np.int64(5), np.int64(169)), (np.int64(6), np.int64(168)), (np.int64(8), np.int64(162)), (np.int64(9), np.int64(161)), (np.int64(10), np.int64(160)), (np.int64(12), np.int64(167)), (np.int64(21), np.int64(166)), (np.int64(29), np.int64(164)), (np.int64(32), np.int64(163))]
+  leak: 5'<->ins=0  ins<->3'=0
+==================================================
+[8] bpRNA_CRW_16038 (208nt)
+  total=80  tRNA5=10  ins=56  tRNA3=0
+  5'<->3' cross=14
+  cross pairs: [(np.int64(0), np.int64(207)), (np.int64(1), np.int64(206)), (np.int64(2), np.int64(205)), (np.int64(3), np.int64(204)), (np.int64(4), np.int64(203)), (np.int64(6), np.int64(201)), (np.int64(9), np.int64(197)), (np.int64(11), np.int64(200)), (np.int64(17), np.int64(193)), (np.int64(19), np.int64(198)), (np.int64(28), np.int64(202)), (np.int64(29), np.int64(194)), (np.int64(31), np.int64(199)), (np.int64(33), np.int64(196))]
+  leak: 5'<->ins=0  ins<->3'=0
+==================================================
+[9] bpRNA_CRW_16403 (188nt)
+  total=72  tRNA5=8  ins=50  tRNA3=1
+  5'<->3' cross=13
+  cross pairs: [(np.int64(0), np.int64(187)), (np.int64(1), np.int64(186)), (np.int64(2), np.int64(185)), (np.int64(3), np.int64(184)), (np.int64(4), np.int64(183)), (np.int64(5), np.int64(182)), (np.int64(6), np.int64(181)), (np.int64(7), np.int64(174)), (np.int64(12), np.int64(178)), (np.int64(13), np.int64(177)), (np.int64(14), np.int64(176)), (np.int64(15), np.int64(175)), (np.int64(16), np.int64(173))]
+  leak: 5'<->ins=0  ins<->3'=0
+==================================================
+[10] bpRNA_CRW_16422 (195nt)
+  total=71  tRNA5=9  ins=51  tRNA3=0
+  5'<->3' cross=11
+  cross pairs: [(np.int64(0), np.int64(194)), (np.int64(1), np.int64(193)), (np.int64(2), np.int64(192)), (np.int64(3), np.int64(191)), (np.int64(4), np.int64(190)), (np.int64(5), np.int64(184)), (np.int64(6), np.int64(183)), (np.int64(7), np.int64(182)), (np.int64(8), np.int64(181)), (np.int64(11), np.int64(189)), (np.int64(12), np.int64(188))]
+  leak: 5'<->ins=0  ins<->3'=0

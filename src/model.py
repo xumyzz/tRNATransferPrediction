@@ -152,9 +152,10 @@ class SpotRNA_LSTM_Refined(nn.Module):
         x_1d = torch.cat([x_local, x_lstm], dim=-1)
 
         # 转换为 2D Map
-        x_row = x_1d.unsqueeze(2).expand(-1, -1, L, -1)
-        x_col = x_1d.unsqueeze(1).expand(-1, L, -1, -1)
-        x_2d = torch.cat([x_row, x_col], dim=-1)
+        # 学两个投影矩阵，而不是暴力展开
+        self.proj_row = nn.Linear(dim_1d, dim_1d)
+        self.proj_col = nn.Linear(dim_1d, dim_1d)
+        x_2d = self.proj_row(x_1d).unsqueeze(2) + self.proj_col(x_1d).unsqueeze(1)
         x_2d = x_2d.permute(0, 3, 1, 2)
 
         # 加入先验特征并通过 2D ResNet
@@ -599,7 +600,7 @@ class SpotRNA_LSTM_Refined_BPPM_Chimeric(nn.Module):
         self.hidden_dim = config.HIDDEN_DIM
         self.num_res1d = config.RESNET_LAYERS
         self.lstm_hidden = getattr(config, 'LSTM_HIDDEN', self.hidden_dim)
-        self.default_trna_len = getattr(config, 'DEFAULT_TRNA_LEN', 76)
+        
 
         self.embedding = nn.Linear(4, self.hidden_dim)
 
@@ -636,13 +637,28 @@ class SpotRNA_LSTM_Refined_BPPM_Chimeric(nn.Module):
         )
         self.final_conv = nn.Conv2d(self.hidden_dim, 1, kernel_size=1)
 
-    def _generate_seg_ids(self, L, domain_split_idx, device):
-        B = domain_split_idx.size(0)
+    def _generate_seg_ids_triple(self, B, L, trna_5end_len, trna_3end_len, device):
+        """
+        三段式域标签：5'tRNA(域0) - miRNA前体(域2) - 3'tRNA(域0)
+        """
         seg_ids = torch.zeros(B, L, dtype=torch.long, device=device)
+        
+        if trna_5end_len is None or trna_3end_len is None:
+            return seg_ids  # 全0，普通RNA模式
+        
         for b in range(B):
-            split = domain_split_idx[b].item()
-            split = max(1, min(split, L - 1))
-            seg_ids[b, split:] = 2
+            five_len = trna_5end_len[b].item()
+            three_len = trna_3end_len[b].item()
+            
+            if five_len + three_len >= L:
+                continue
+            
+            mirna_start = five_len
+            mirna_end = L - three_len
+            
+            if mirna_start < mirna_end:
+                seg_ids[b, mirna_start:mirna_end] = 2
+        
         return seg_ids
 
     def _create_domain_attention_mask(self, seg_ids):
@@ -657,21 +673,22 @@ class SpotRNA_LSTM_Refined_BPPM_Chimeric(nn.Module):
         same_domain = (seg_i == seg_j)
         return same_domain
 
-    def forward(self, x, bppm=None, mask=None, domain_split_idx=None, return_seg_ids=False):
+    def forward(self, x, bppm=None, mask=None, 
+                trna_5end_len=None, trna_3end_len=None, 
+                return_seg_ids=False):
         B, L, _ = x.shape
         device = x.device
 
-        # 0. 自动生成域标签
-        if domain_split_idx is None or domain_split_idx == 0:
-            # 模式A：普通RNA预训练模式（全序列同域，无隔离）
+               # 0. 三段式域标签生成
+        if trna_5end_len is None or trna_3end_len is None:
+            # 普通RNA预训练模式：全序列同域
             seg_ids = torch.zeros(B, L, dtype=torch.long, device=device)
         else:
-            # 模式B：嵌合RNA模式（tRNA=0, siRNA=2）
-            if isinstance(domain_split_idx, int):
-                domain_split_idx = torch.full((B,), domain_split_idx, dtype=torch.long, device=device)
-            elif domain_split_idx.dim() == 0:
-                domain_split_idx = domain_split_idx.unsqueeze(0).expand(B)
-            seg_ids = self._generate_seg_ids(L, domain_split_idx, device)
+            if isinstance(trna_5end_len, int):
+                trna_5end_len = torch.full((B,), trna_5end_len, dtype=torch.long, device=device)
+            if isinstance(trna_3end_len, int):
+                trna_3end_len = torch.full((B,), trna_3end_len, dtype=torch.long, device=device)
+            seg_ids = self._generate_seg_ids_triple(B, L, trna_5end_len, trna_3end_len, device)
 
         # 1. 物理先验（AU/CG/GU互补规则）
         A = x[:, :, 0:1]

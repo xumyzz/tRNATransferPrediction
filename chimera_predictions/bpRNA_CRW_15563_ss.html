@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>RNA SS - bpRNA_CRW_15563</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #1a1a2e; color: #eee; padding: 10px; }
+.header { text-align: center; padding: 10px 0 5px; }
+.header h2 { font-size: 16px; color: #ccc; }
+.header .stats { font-size: 12px; color: #888; margin-top: 3px; }
+.legend { display: flex; justify-content: center; gap: 16px; margin: 8px 0; font-size: 11px; }
+.legend span { display: flex; align-items: center; gap: 4px; }
+.legend .dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.legend .dot.cross { background: #e67e22; }
+.legend .dot.t5 { background: #3498db; }
+.legend .dot.ins { background: #2ecc71; }
+.legend .dot.t3 { background: #9b59b6; }
+#canvas { display: block; margin: 0 auto; }
+.domain-bar { display: flex; justify-content: center; margin-top: 5px; font-size: 10px; font-family: monospace; gap: 2px; }
+.domain-bar .block { width: 3px; height: 14px; display: inline-block; border-radius: 1px; }
+.domain-bar .t { background: #3498db; }
+.domain-bar .i { background: #2ecc71; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h2>bpRNA_CRW_15563 (179 nt)</h2>
+  <div class="stats">
+    pairs=73 &nbsp;|&nbsp;
+    cross=14 &nbsp;|&nbsp;
+    tRNA5=11 &nbsp;|&nbsp;
+    ins=48 &nbsp;|&nbsp;
+    tRNA3=0
+  </div>
+</div>
+<div class="legend">
+  <span><b class="dot cross"></b> 5'↔3' cross</span>
+  <span><b class="dot t5"></b> 5' tRNA</span>
+  <span><b class="dot ins"></b> Insert</span>
+  <span><b class="dot t3"></b> 3' tRNA</span>
+</div>
+<canvas id="canvas"></canvas>
+<div class="domain-bar" id="domainBar"></div>
+<script>
+const L = 179;
+const insS = 43;
+const insE = 164;
+const pairs = [{"i": 0, "j": 178, "domain": "cross"}, {"i": 1, "j": 177, "domain": "cross"}, {"i": 2, "j": 168, "domain": "cross"}, {"i": 3, "j": 167, "domain": "cross"}, {"i": 4, "j": 166, "domain": "cross"}, {"i": 5, "j": 173, "domain": "cross"}, {"i": 6, "j": 164, "domain": "cross"}, {"i": 7, "j": 20, "domain": "t5"}, {"i": 8, "j": 175, "domain": "cross"}, {"i": 9, "j": 174, "domain": "cross"}, {"i": 10, "j": 26, "domain": "t5"}, {"i": 11, "j": 169, "domain": "cross"}, {"i": 12, "j": 165, "domain": "cross"}, {"i": 13, "j": 17, "domain": "t5"}, {"i": 14, "j": 172, "domain": "cross"}, {"i": 15, "j": 32, "domain": "t5"}, {"i": 19, "j": 28, "domain": "t5"}, {"i": 21, "j": 41, "domain": "t5"}, {"i": 22, "j": 36, "domain": "t5"}, {"i": 23, "j": 39, "domain": "t5"}, {"i": 24, "j": 38, "domain": "t5"}, {"i": 25, "j": 37, "domain": "t5"}, {"i": 30, "j": 42, "domain": "t5"}, {"i": 34, "j": 171, "domain": "cross"}, {"i": 35, "j": 170, "domain": "cross"}, {"i": 43, "j": 134, "domain": "ins"}, {"i": 44, "j": 78, "domain": "ins"}, {"i": 48, "j": 155, "domain": "ins"}, {"i": 49, "j": 154, "domain": "ins"}, {"i": 50, "j": 153, "domain": "ins"}, {"i": 51, "j": 125, "domain": "ins"}, {"i": 52, "j": 151, "domain": "ins"}, {"i": 53, "j": 150, "domain": "ins"}, {"i": 54, "j": 149, "domain": "ins"}, {"i": 55, "j": 148, "domain": "ins"}, {"i": 56, "j": 147, "domain": "ins"}, {"i": 57, "j": 146, "domain": "ins"}, {"i": 58, "j": 145, "domain": "ins"}, {"i": 59, "j": 99, "domain": "ins"}, {"i": 60, "j": 94, "domain": "ins"}, {"i": 61, "j": 93, "domain": "ins"}, {"i": 62, "j": 92, "domain": "ins"}, {"i": 63, "j": 91, "domain": "ins"}, {"i": 64, "j": 108, "domain": "ins"}, {"i": 66, "j": 110, "domain": "ins"}, {"i": 67, "j": 86, "domain": "ins"}, {"i": 68, "j": 96, "domain": "ins"}, {"i": 69, "j": 84, "domain": "ins"}, {"i": 70, "j": 83, "domain": "ins"}, {"i": 71, "j": 82, "domain": "ins"}, {"i": 72, "j": 81, "domain": "ins"}, {"i": 73, "j": 80, "domain": "ins"}, {"i": 74, "j": 79, "domain": "ins"}, {"i": 75, "j": 102, "domain": "ins"}, {"i": 76, "j": 101, "domain": "ins"}, {"i": 77, "j": 89, "domain": "ins"}, {"i": 85, "j": 123, "domain": "ins"}, {"i": 90, "j": 136, "domain": "ins"}, {"i": 103, "j": 120, "domain": "ins"}, {"i": 104, "j": 160, "domain": "ins"}, {"i": 105, "j": 159, "domain": "ins"}, {"i": 107, "j": 157, "domain": "ins"}, {"i": 113, "j": 162, "domain": "ins"}, {"i": 114, "j": 117, "domain": "ins"}, {"i": 115, "j": 116, "domain": "ins"}, {"i": 118, "j": 138, "domain": "ins"}, {"i": 119, "j": 137, "domain": "ins"}, {"i": 124, "j": 156, "domain": "ins"}, {"i": 129, "j": 143, "domain": "ins"}, {"i": 130, "j": 142, "domain": "ins"}, {"i": 131, "j": 141, "domain": "ins"}, {"i": 132, "j": 140, "domain": "ins"}, {"i": 133, "j": 139, "domain": "ins"}];
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+// ── 自适应布局 ──
+const baseWidth = 6;
+const arcHeight = 60;
+const marginX = 5;
+const marginTop = 20;
+const marginBottom = 30;
+
+// 紧凑布局：bases on bottom, arcs above
+const totalW = L * baseWidth + marginX * 2;
+// 找出最宽嵌套深度
+const depthCount = new Array(L).fill(0);
+const depthStack = [];
+for (const p of pairs) {
+    depthStack.push(p);
+}
+// 简化：高度随 cross-pair 数量自适应
+const crossCount = pairs.filter(p => p.domain === 'cross').length;
+const innerCount = pairs.filter(p => p.domain !== 'cross').length;
+const arcTotalH = Math.max(crossCount, innerCount) * 3 + 80;
+const height = arcTotalH + 80;
+
+canvas.width = totalW;
+canvas.height = height;
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+// ── 域分段背景 ──
+const bgY = height - 50;
+const barH = 40;
+ctx.fillStyle = 'rgba(52,152,219,0.15)';
+ctx.fillRect(marginX, bgY, insS * baseWidth, barH);
+ctx.fillStyle = 'rgba(46,204,113,0.15)';
+ctx.fillRect(marginX + insS * baseWidth, bgY, (insE - insS) * baseWidth, barH);
+ctx.fillStyle = 'rgba(155,89,182,0.15)';
+ctx.fillRect(marginX + insE * baseWidth, bgY, (L - insE) * baseWidth, barH);
+
+// ── 碱基标尺 ──
+ctx.fillStyle = '#aaa';
+ctx.font = '8px monospace';
+ctx.textAlign = 'center';
+const seq = "UCAUCUGGUGAUGAUGCUCUUUAGGGUAACACCCGUUUUCCAUACGAUACGUAGCCGACCUGAGAGGGUGAUCGGCCACACUGGAACUGAGACACGGUCCAGACUCCUACGGGAGGCAGCAGUAGGGAAUCUUCCGCAAUGGGCGAAAGCCUGACGGAGCAACGCCGCGUGAGUGAUGA";
+for (let i = 0; i < L; i++) {
+    const x = marginX + i * baseWidth + baseWidth / 2;
+    ctx.fillText(seq[i], x, height - 10);
+    // 小竖线
+    if (i % 10 === 0) {
+        ctx.strokeStyle = '#555';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(x, height - 50);
+        ctx.lineTo(x, height - 15);
+        ctx.stroke();
+    }
+}
+
+// 域分隔线
+ctx.strokeStyle = '#e74c3c';
+ctx.lineWidth = 1.5;
+ctx.setLineDash([4, 3]);
+[insS, insE].forEach(pos => {
+    const x = marginX + pos * baseWidth;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+    ctx.stroke();
+});
+ctx.setLineDash([]);
+
+// ── 分层画弧 ──
+const domainColors = {
+    cross: '#e67e22',
+    t5:    '#3498db',
+    ins:   '#2ecc71',
+    t3:    '#9b59b6',
+};
+
+// 纵坐标分配：避免重叠
+const levels = [];
+for (const p of pairs) {
+    let level = 0;
+    for (const q of levels) {
+        if (p.i < q.i && q.i < p.j && q.j < p.j) {
+            level = Math.max(level, q.level + 1);
+        }
+        if (q.i < p.i && p.i < q.j && p.j < q.j) {
+            level = Math.max(level, q.level + 1);
+        }
+    }
+    p.level = level;
+    levels.push(p);
+}
+
+for (const p of pairs) {
+    const x1 = marginX + p.i * baseWidth + baseWidth / 2;
+    const x2 = marginX + p.j * baseWidth + baseWidth / 2;
+    const midX = (x1 + x2) / 2;
+    const span = x2 - x1;
+
+    const baseY = height - 55;
+    const thisArcH = Math.min(span * 0.35, 100);
+    const levelOffset = p.level * 5;
+    const cy = baseY - thisArcH / 2 - levelOffset;
+
+    ctx.strokeStyle = domainColors[p.domain] || '#aaa';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(x1, baseY);
+    ctx.quadraticCurveTo(midX, cy, x2, baseY);
+    ctx.stroke();
+
+    // 端点小圆
+    ctx.fillStyle = domainColors[p.domain] || '#aaa';
+    ctx.beginPath();
+    ctx.arc(x1, baseY, 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x2, baseY, 2, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+// ── 域标签 ──
+ctx.fillStyle = '#fff';
+ctx.font = '10px Arial';
+ctx.textAlign = 'center';
+const mid5 = insS / 2;
+const midIns = insS + (insE - insS) / 2;
+const mid3 = insE + (L - insE) / 2;
+ctx.fillText("5' tRNA", marginX + mid5 * baseWidth, 12);
+ctx.fillText("Insert",  marginX + midIns * baseWidth, 12);
+ctx.fillText("3' tRNA", marginX + mid3 * baseWidth, 12);
+
+</script>
+</body>
+</html>
