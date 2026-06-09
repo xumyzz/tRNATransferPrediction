@@ -1,0 +1,21 @@
+nohup: ignoring input
+Using device: cuda
+🧐 Scanning 13598 files (MaxLen=600, AllowPseudoknot=False)...
+
+==================================================
+📊 Loading Report (MaxLen=600)
+✅ Total kept: 4976
+❌ Too long: 8078
+❌ Length mismatch: 0
+❌ Too many Ns: 0
+❌ Invalid bases: 49
+❌ Pseudoknot filtered: 495
+❌ Parse errors: 0
+ℹ️  .dbn files with .st format: 13598
+==================================================
+
+Found 326 clusters
+Mapped to 259 non-empty clusters
+Note: 8622 sequences were skipped (e.g., filtered out)
+Epoch [1/30] Step [0] Loss: 1.3946
+Epoch [1/30] Step [50] Loss: 1.8877

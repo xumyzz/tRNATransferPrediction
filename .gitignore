@@ -1,45 +1,23 @@
+# 大文件
+*.pkl
+*.fasta
+*.fasta.gz
+
+# 权重文件（太大了，用 Git LFS 或 Release 单独发）
+checkpoints*/
+checkpoints_*/
+*.pth
+
 # Python
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
+*.pyc
 
-# PyTorch
-*.pth
-*.pt
+# 预测输出
+*_predictions/
+*.npy
+*.html
+viz_output/
 
-# Jupyter
-.ipynb_checkpoints
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Project specific
-checkpoints/
-vis_results/
-goodPth/
-data/chimeras.pkl
+# 临时
+tmp/
+output/

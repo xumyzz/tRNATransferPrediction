@@ -1,0 +1,44 @@
+nohup: ignoring input
+Using device: cuda
+Configuration: {'data_dir': '/root/autodl-tmp/newPredicProject/dbnFiles', 'max_len': 600, 'clstr_path': '/root/autodl-tmp/newPredicProject/TrainFiles/clusterfiles/bpRNA_1m_c80.fa.clstr', 'train_frac': 0.98, 'val_frac': 0.01, 'split_out': None, 'batch_size': 4, 'accum_steps': 16, 'epochs': 100, 'lr': 1e-05, 'pos_weight': 3.5, 'weight_decay': 0.0001, 'resnet_layers': 8, 'hidden_dim': 64, 'lstm_hidden': 64, 'pretrained_path': None, 'pp_offset': 0.35, 'pp_min_loop': 4, 'save_dir': '/root/autodl-tmp/myPredicProject/checkpoints/diff0.8v1', 'seed': 42, 'device': device(type='cuda')}
+
+Loading dataset from /root/autodl-tmp/newPredicProject/dbnFiles...
+🧐 Scanning 83504 files (MaxLen=600, AllowPseudoknot=False)...
+
+==================================================
+📊 Loading Report (MaxLen=600)
+✅ Total kept: 68942
+❌ Too long: 8523
+❌ Length mismatch: 0
+❌ Too many Ns: 27
+❌ Invalid bases: 436
+❌ Pseudoknot filtered: 5576
+❌ Parse errors: 0
+==================================================
+
+Loaded 68942 sequences
+
+Creating cluster-based split from /root/autodl-tmp/newPredicProject/TrainFiles/clusterfiles/bpRNA_1m_c80.fa.clstr...
+Found 13580 clusters
+Warning: 5576 sequences in clusters not found in dataset
+Mapped to 12671 non-empty clusters
+
+Split information:
+  total_sequences: 68942
+  total_clusters: 12671
+  train_clusters: 12417
+  val_clusters: 126
+  test_clusters: 128
+  train_sequences: 67566
+  val_sequences: 402
+  test_sequences: 734
+  train_frac_actual: 0.98004119404717
+  val_frac_actual: 0.005830988367033159
+  test_frac_actual: 0.01064663050100084
+
+Initializing model...
+
+Starting training for 100 epochs...
+Batch size: 4, Gradient accumulation: 16
+Epoch [1/100] Step [0] Loss: 0.9068
+Epoch [1/100] Step [50] Loss: 0.8248
