@@ -639,7 +639,7 @@ class SpotRNA_LSTM_Refined_BPPM_Chimeric(nn.Module):
         dim_2d_input = dim_1d * 2
 
         self.proj_2d = nn.Sequential(
-            nn.Conv2d(dim_2d_input + 5, self.hidden_dim, kernel_size=1),
+            nn.Conv2d(dim_2d_input + 4, self.hidden_dim, kernel_size=1),
             nn.BatchNorm2d(self.hidden_dim),
             nn.ELU()
         )
@@ -680,7 +680,7 @@ class SpotRNA_LSTM_Refined_BPPM_Chimeric(nn.Module):
         same_domain = (seg_i == seg_j)
         return same_domain
 
-    def forward(self, x, bppm=None, mfe_contact=None, mask=None,
+    def forward(self, x, bppm=None, mask=None,
                 trna_5end_len=None, trna_3end_len=None,
                 return_seg_ids=False):
         B, L, _ = x.shape
@@ -712,17 +712,10 @@ class SpotRNA_LSTM_Refined_BPPM_Chimeric(nn.Module):
                 bppm = bppm.unsqueeze(1)
             prior_2d = torch.cat([prior_2d, bppm], dim=1)
         else:
-            prior_2d = torch.cat([prior_2d, torch.zeros((B, 1, L, L), device=device)], dim=1)
+            dummy_bppm = torch.zeros((B, 1, L, L), device=device)
+            prior_2d = torch.cat([prior_2d, dummy_bppm], dim=1)
 
-        # ── 3. MFE contact ──
-        if mfe_contact is not None:
-            if len(mfe_contact.shape) == 3:
-                mfe_contact = mfe_contact.unsqueeze(1)
-            prior_2d = torch.cat([prior_2d, mfe_contact], dim=1)
-        else:
-            prior_2d = torch.cat([prior_2d, torch.zeros((B, 1, L, L), device=device)], dim=1)
-
-                # ── 3. 1D 局部特征 ──
+        # ── 3. 1D 局部特征 ──
         x_emb = self.embedding(x)
         x_local = x_emb.permute(0, 2, 1)
         for layer in self.resnet1d_layers:

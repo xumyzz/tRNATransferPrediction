@@ -88,31 +88,6 @@ def get_bppm_matrix(seq):
     return matrix
 
 
-def get_mfe_contact(seq):
-    """
-    用 ViennaRNA RNAfold 计算 MFE 结构的二值接触图 (L, L) int8
-    ViennaRNA 不可用时返回全零矩阵。
-    """
-    L = len(seq)
-    safe_seq = seq.replace('N', 'A')
-    try:
-        fc = RNA.fold_compound(safe_seq)
-        _, mfe = fc.mfe()
-    except Exception:
-        return np.zeros((L, L), dtype=np.float32)
-
-    contact = np.zeros((L, L), dtype=np.float32)
-    stacks = {'(': [], '[': [], '{': [], '<': []}
-    pairs_map = {')': '(', ']': '[', '}': '{', '>': '<'}
-    for i, c in enumerate(mfe[:L]):
-        if c in stacks:
-            stacks[c].append(i)
-        elif c in pairs_map and stacks[pairs_map[c]]:
-            j = stacks[pairs_map[c]].pop()
-            contact[i, j] = contact[j, i] = 1.0
-    return contact
-
-
 # --- 3. 更新后的 collate_pad ---
 def collate_pad(batch):
     """
@@ -302,22 +277,3 @@ class MultiFileDatasetUpgrade(Dataset):
     
     def get_name(self, idx):
         return self.names[idx]
-
-
-def collate_pad_v2(batch):
-    max_len = max([x[0].shape[0] for x in batch])
-    b_size = len(batch)
-    seqs = torch.zeros(b_size, max_len, 4)
-    bppms = torch.zeros(b_size, max_len, max_len)
-    mfe_contacts = torch.zeros(b_size, max_len, max_len)
-    labels = torch.zeros(b_size, max_len, max_len)
-    masks = torch.zeros(b_size, max_len)
-
-    for i, (s, b, l) in enumerate(batch):
-        n = s.shape[0]
-        seqs[i, :n] = s
-        bppms[i, :n, :n] = b
-        labels[i, :n, :n] = l
-        masks[i, :n] = 1.0
-
-    return seqs, bppms, mfe_contacts, labels, masks
